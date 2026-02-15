@@ -31,7 +31,7 @@ class DashboardView(ttk.Frame):
 
         # Row 1: Warnings / Alerts
         self.card4 = self.create_card(1, 0, "Aged Inventory (>1 Yr)")
-        self.card4_value.configure(foreground="#dc3545") # Red for warning
+        # self.aged_count_label is set inside create_card, no need to configure here or use wrong attr
 
         # Row 2: Recent Activity
         activity_frame = ttk.LabelFrame(self, text="Recent Acquisitions")
