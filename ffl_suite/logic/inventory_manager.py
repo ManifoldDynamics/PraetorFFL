@@ -12,8 +12,8 @@ def add_acquisition(firearm_data, contact_id):
         int: The ID of the newly added firearm, or None on failure.
     """
     query = """
-        INSERT INTO firearms (make, model, serial_number, type, caliber, importer, condition, acquisition_date, source_contact_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO firearms (make, model, serial_number, type, caliber, importer, condition, upc, acquisition_date, source_contact_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
     params = (
         firearm_data.get('make'),
@@ -23,6 +23,7 @@ def add_acquisition(firearm_data, contact_id):
         firearm_data.get('caliber'),
         firearm_data.get('importer'),
         firearm_data.get('condition'),
+        firearm_data.get('upc'),
         firearm_data.get('acquisition_date'),
         contact_id
     )
@@ -64,10 +65,10 @@ def search_inventory(query_str):
     """
     sql = """
         SELECT * FROM firearms
-        WHERE (make LIKE ? OR model LIKE ? OR serial_number LIKE ?)
+        WHERE (make LIKE ? OR model LIKE ? OR serial_number LIKE ? OR upc LIKE ?)
         AND disposition_date IS NULL
     """
-    params = (f'%{query_str}%', f'%{query_str}%', f'%{query_str}%')
+    params = (f'%{query_str}%', f'%{query_str}%', f'%{query_str}%', f'%{query_str}%')
     return execute_query(sql, params, fetch=True)
 
 def get_bound_book():

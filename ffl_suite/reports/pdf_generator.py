@@ -61,7 +61,7 @@ def generate_bound_book_pdf(filepath):
 
     pdf.output(filepath)
 
-def generate_4473_pdf(filepath, firearm_data, buyer_data, ffl_data):
+def generate_4473_pdf(filepath, firearm_data, buyer_data, ffl_data, answers=None):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("helvetica", 'B', 16)
@@ -72,6 +72,14 @@ def generate_4473_pdf(filepath, firearm_data, buyer_data, ffl_data):
     pdf.cell(0, 10, f"FFL: {ffl_data.get('name')}", 0, 1)
     pdf.cell(0, 10, f"Buyer: {buyer_data.get('name')}", 0, 1)
     pdf.cell(0, 10, f"Firearm: {firearm_data.get('make')} {firearm_data.get('model')} {firearm_data.get('serial')}", 0, 1)
+
+    if answers:
+        pdf.ln(10)
+        pdf.set_font("helvetica", 'B', 12)
+        pdf.cell(0, 10, "Section B - Transferee Questions", 0, 1)
+        pdf.set_font("helvetica", '', 10)
+        for q_id, ans in answers.items():
+            pdf.cell(0, 6, f"Question {q_id}: {ans}", 0, 1)
 
     pdf.ln(20)
     pdf.multi_cell(0, 10, "Note: This is a placeholder for the actual ATF Form 4473. "

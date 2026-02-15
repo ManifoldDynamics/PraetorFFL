@@ -4,6 +4,8 @@ def can_acquire(make, model, serial_number):
     """
     Checks if a firearm with the same make, model, and serial number already exists in inventory.
     """
+    # Now that we have UPC, we could check that too, but serial uniqueness is the key ATF requirement.
+    # Note: Technically, two manufacturers can have the same serial, so Make/Model/Serial combo is standard check.
     sql = "SELECT id FROM firearms WHERE make = ? AND model = ? AND serial_number = ? AND disposition_date IS NULL"
     result = execute_query(sql, (make, model, serial_number), fetch=True)
     return len(result) == 0

@@ -23,12 +23,10 @@ class App(tk.Tk):
         self.check_initial_setup()
 
     def create_tabs(self):
-        # Dashboard (Simple Welcome)
-        dashboard = ttk.Frame(self.notebook)
-        ttk.Label(dashboard, text="Welcome to FFL Suite", font=("Arial", 24)).pack(pady=50)
-        ttk.Label(dashboard, text="Select a tab to begin.", font=("Arial", 14)).pack()
-        self.tabs['dashboard'] = dashboard
-        self.notebook.add(dashboard, text="Dashboard")
+        # Dashboard
+        from ffl_suite.gui.views.dashboard_view import DashboardView
+        self.tabs['dashboard'] = DashboardView(self.notebook)
+        self.notebook.add(self.tabs['dashboard'], text="Dashboard")
 
         # Acquisition
         self.tabs['acquisition'] = AcquisitionView(self.notebook)

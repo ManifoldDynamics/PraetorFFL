@@ -29,6 +29,32 @@ class SettingsView(ttk.Frame):
 
         ttk.Button(self, text="Save Settings", command=self.save_settings).pack(pady=20)
 
+        # Data Management
+        data_frame = ttk.LabelFrame(self, text="Data Management")
+        data_frame.pack(fill='x', padx=20, pady=10)
+
+        ttk.Button(data_frame, text="Backup Database", command=self.backup_db).pack(side='left', padx=10, pady=10)
+        ttk.Button(data_frame, text="Export Contacts (CSV)", command=self.export_contacts).pack(side='left', padx=10, pady=10)
+
+    def backup_db(self):
+        from ffl_suite.logic.data.backup_manager import create_backup
+        path = create_backup()
+        if path:
+            messagebox.showinfo("Backup", f"Backup created at:\n{path}")
+        else:
+            messagebox.showerror("Backup", "Backup failed.")
+
+    def export_contacts(self):
+        from ffl_suite.logic.data.backup_manager import export_contacts_csv
+        from tkinter import filedialog
+        filename = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
+        if filename:
+            try:
+                export_contacts_csv(filename)
+                messagebox.showinfo("Success", "Contacts exported.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Export failed: {e}")
+
     def load_settings(self):
         info = get_ffl_info()
         if info['name']: self.name_entry.insert(0, info['name'])

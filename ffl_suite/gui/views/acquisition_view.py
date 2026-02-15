@@ -23,10 +23,15 @@ class AcquisitionView(ttk.Frame):
         self.contact_combo.grid(row=0, column=1, sticky='w', padx=5, pady=5)
         self.contact_combo['postcommand'] = self.load_contacts
 
+        # Row 0b: UPC (Scanner friendly)
+        ttk.Label(form_frame, text="UPC/EAN:").grid(row=1, column=0, sticky='e')
+        self.upc_entry = ttk.Entry(form_frame, width=40)
+        self.upc_entry.grid(row=1, column=1, sticky='w', padx=5, pady=5)
+
         # Row 1: Make
-        ttk.Label(form_frame, text="Make:").grid(row=1, column=0, sticky='e')
+        ttk.Label(form_frame, text="Make:").grid(row=2, column=0, sticky='e')
         self.make_entry = ttk.Entry(form_frame, width=40)
-        self.make_entry.grid(row=1, column=1, sticky='w', padx=5, pady=5)
+        self.make_entry.grid(row=2, column=1, sticky='w', padx=5, pady=5)
 
         # Row 2: Model
         ttk.Label(form_frame, text="Model:").grid(row=2, column=0, sticky='e')
@@ -59,9 +64,16 @@ class AcquisitionView(ttk.Frame):
         self.date_entry.insert(0, date.today().isoformat())
         self.date_entry.grid(row=7, column=1, sticky='w', padx=5, pady=5)
 
-        ttk.Button(self, text="Record Acquisition", command=self.submit).pack(pady=20)
+        btn_frame = ttk.Frame(self)
+        btn_frame.pack(pady=20)
+        ttk.Button(btn_frame, text="Record Acquisition", command=self.submit).pack(side='left', padx=10)
+        ttk.Button(btn_frame, text="Bulk Acquisition", command=self.open_bulk_dialog).pack(side='left', padx=10)
 
         self.contact_map = {} # Name -> ID
+
+    def open_bulk_dialog(self):
+        from ffl_suite.gui.views.bulk_acquisition_dialog import BulkAcquisitionDialog
+        BulkAcquisitionDialog(self)
 
     def load_contacts(self):
         sql = "SELECT id, name, license_number FROM contacts"
@@ -91,6 +103,7 @@ class AcquisitionView(ttk.Frame):
             'caliber': self.caliber_entry.get(),
             'importer': self.importer_entry.get(),
             'condition': "New", # Defaulting for now
+            'upc': self.upc_entry.get(),
             'acquisition_date': self.date_entry.get()
         }
 

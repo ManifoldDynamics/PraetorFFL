@@ -1,2 +1,13 @@
-fpdf2
-pyinstaller
+altgraph==0.17.5
+defusedxml==0.7.1
+fonttools==4.61.1
+fpdf2==2.8.5
+greenlet==3.3.0
+packaging==26.0
+pillow==12.1.1
+playwright==1.57.0
+pyee==13.0.0
+pyinstaller==6.19.0
+pyinstaller-hooks-contrib==2026.0
+setuptools==82.0.0
+typing_extensions==4.15.0

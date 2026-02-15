@@ -93,10 +93,10 @@ class DispositionView(ttk.Frame):
         buyer_data = {'name': contact_name if contact_name else "Unknown Buyer"}
         ffl_data = get_ffl_info()
 
-        filename = filedialog.asksaveasfilename(defaultextension=".pdf", initialfile=f"4473_{vals[3]}.pdf")
-        if filename:
-            generate_4473_pdf(filename, firearm_data, buyer_data, ffl_data)
-            messagebox.showinfo("Success", "4473 Generated.")
+        contact_id = self.contact_map.get(contact_name)
+
+        from ffl_suite.gui.views.wizard_4473 import Wizard4473
+        Wizard4473(self, self.selected_firearm_id, firearm_data, contact_name, contact_id)
 
     def load_contacts(self):
         sql = "SELECT id, name, license_number FROM contacts"

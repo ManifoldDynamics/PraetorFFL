@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS firearms (
     caliber TEXT NOT NULL,
     importer TEXT,
     condition TEXT,
+    upc TEXT,
 
     acquisition_date TEXT NOT NULL,
     source_contact_id INTEGER,
