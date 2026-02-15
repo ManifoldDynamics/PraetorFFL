@@ -1,0 +1,39 @@
+{
+  "name": "praetor",
+  "version": "1.0.0",
+  "description": "The Next Generation Home FFL Suite",
+  "main": "dist/main/main.js",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"wait-on tcp:5173 && electron .\"",
+    "build": "tsc -p tsconfig.main.json && vite build",
+    "clean": "rimraf dist",
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ffl",
+    "firearms",
+    "inventory",
+    "compliance"
+  ],
+  "author": "Praetor Team",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^9.4.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.9",
+    "@types/react": "^18.2.64",
+    "@types/react-dom": "^18.2.21",
+    "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^8.2.2",
+    "electron": "^29.1.1",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.2",
+    "vite": "^5.1.6",
+    "wait-on": "^7.2.0"
+  }
+}
