@@ -1,79 +1,68 @@
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import ttk, messagebox
 from datetime import date
 from ffl_suite.logic.inventory_manager import add_acquisition
-from ffl_suite.database.db_manager import execute_query
 from ffl_suite.logic.compliance import can_acquire
+from ffl_suite.database.db_manager import execute_query
 
-class AcquisitionView(ttk.Frame):
+class AcquisitionView(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.pack(expand=True, fill='both')
         self.create_widgets()
+        self.contact_map = {}
 
     def create_widgets(self):
-        ttk.Label(self, text="Acquire Firearm", font=("Arial", 16, "bold")).pack(pady=10)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
-        form_frame = ttk.Frame(self)
+        scroll_frame = ctk.CTkScrollableFrame(self)
+        scroll_frame.pack(fill='both', expand=True, padx=20, pady=20)
+
+        ctk.CTkLabel(scroll_frame, text="Acquire Firearm", font=ctk.CTkFont(size=20, weight="bold")).pack(pady=20)
+
+        # Form Container
+        form_frame = ctk.CTkFrame(scroll_frame, fg_color="transparent")
         form_frame.pack(padx=20, pady=10)
 
-        # Row 0: Source Contact
-        ttk.Label(form_frame, text="Source Contact:").grid(row=0, column=0, sticky='e')
-        self.contact_combo = ttk.Combobox(form_frame, width=40, state="readonly")
-        self.contact_combo.grid(row=0, column=1, sticky='w', padx=5, pady=5)
-        self.contact_combo['postcommand'] = self.load_contacts
+        # Fields
+        fields = [
+            ("Source Contact:", "contact_combo", "combo"),
+            ("UPC/EAN:", "upc_entry", "entry"),
+            ("Make:", "make_entry", "entry"),
+            ("Model:", "model_entry", "entry"),
+            ("Serial Number:", "serial_entry", "entry"),
+            ("Type:", "type_combo", "combo"),
+            ("Caliber/Gauge:", "caliber_entry", "entry"),
+            ("Importer (if any):", "importer_entry", "entry"),
+            ("Date (YYYY-MM-DD):", "date_entry", "entry")
+        ]
 
-        # Row 0b: UPC (Scanner friendly)
-        ttk.Label(form_frame, text="UPC/EAN:").grid(row=1, column=0, sticky='e')
-        self.upc_entry = ttk.Entry(form_frame, width=40)
-        self.upc_entry.grid(row=1, column=1, sticky='w', padx=5, pady=5)
+        self.entries = {}
 
-        # Row 1: Make
-        ttk.Label(form_frame, text="Make:").grid(row=2, column=0, sticky='e')
-        self.make_entry = ttk.Entry(form_frame, width=40)
-        self.make_entry.grid(row=2, column=1, sticky='w', padx=5, pady=5)
+        for i, (label, name, w_type) in enumerate(fields):
+            ctk.CTkLabel(form_frame, text=label).grid(row=i, column=0, sticky="e", padx=10, pady=10)
 
-        # Row 2: Model
-        ttk.Label(form_frame, text="Model:").grid(row=2, column=0, sticky='e')
-        self.model_entry = ttk.Entry(form_frame, width=40)
-        self.model_entry.grid(row=2, column=1, sticky='w', padx=5, pady=5)
+            if w_type == "entry":
+                entry = ctk.CTkEntry(form_frame, width=300)
+                if name == "date_entry":
+                    entry.insert(0, date.today().isoformat())
+            else: # combo
+                if name == "type_combo":
+                    values = ["Pistol", "Revolver", "Rifle", "Shotgun", "Receiver", "Frame", "Silencer", "Any Other Weapon"]
+                else:
+                    values = [] # contact_combo
+                entry = ctk.CTkComboBox(form_frame, width=300, values=values)
 
-        # Row 3: Serial
-        ttk.Label(form_frame, text="Serial Number:").grid(row=3, column=0, sticky='e')
-        self.serial_entry = ttk.Entry(form_frame, width=40)
-        self.serial_entry.grid(row=3, column=1, sticky='w', padx=5, pady=5)
+            entry.grid(row=i, column=1, sticky="w", padx=10, pady=10)
+            self.entries[name] = entry
 
-        # Row 4: Type
-        ttk.Label(form_frame, text="Type:").grid(row=4, column=0, sticky='e')
-        self.type_combo = ttk.Combobox(form_frame, values=["Pistol", "Revolver", "Rifle", "Shotgun", "Receiver", "Frame", "Silencer", "Any Other Weapon"], state="readonly")
-        self.type_combo.grid(row=4, column=1, sticky='w', padx=5, pady=5)
-
-        # Row 5: Caliber
-        ttk.Label(form_frame, text="Caliber/Gauge:").grid(row=5, column=0, sticky='e')
-        self.caliber_entry = ttk.Entry(form_frame, width=40)
-        self.caliber_entry.grid(row=5, column=1, sticky='w', padx=5, pady=5)
-
-        # Row 6: Importer
-        ttk.Label(form_frame, text="Importer (if any):").grid(row=6, column=0, sticky='e')
-        self.importer_entry = ttk.Entry(form_frame, width=40)
-        self.importer_entry.grid(row=6, column=1, sticky='w', padx=5, pady=5)
-
-        # Row 7: Date
-        ttk.Label(form_frame, text="Date (YYYY-MM-DD):").grid(row=7, column=0, sticky='e')
-        self.date_entry = ttk.Entry(form_frame, width=40)
-        self.date_entry.insert(0, date.today().isoformat())
-        self.date_entry.grid(row=7, column=1, sticky='w', padx=5, pady=5)
-
-        btn_frame = ttk.Frame(self)
+        # Buttons
+        btn_frame = ctk.CTkFrame(scroll_frame, fg_color="transparent")
         btn_frame.pack(pady=20)
-        ttk.Button(btn_frame, text="Record Acquisition", command=self.submit).pack(side='left', padx=10)
-        ttk.Button(btn_frame, text="Bulk Acquisition", command=self.open_bulk_dialog).pack(side='left', padx=10)
 
-        self.contact_map = {} # Name -> ID
-
-    def open_bulk_dialog(self):
-        from ffl_suite.gui.views.bulk_acquisition_dialog import BulkAcquisitionDialog
-        BulkAcquisitionDialog(self)
+        ctk.CTkButton(btn_frame, text="Record Acquisition", command=self.submit).pack(side='left', padx=10)
+        ctk.CTkButton(btn_frame, text="Bulk Acquisition", command=self.open_bulk_dialog).pack(side='left', padx=10)
 
     def load_contacts(self):
         sql = "SELECT id, name, license_number FROM contacts"
@@ -87,24 +76,30 @@ class AcquisitionView(ttk.Frame):
                     display += f" ({c[2]})"
                 values.append(display)
                 self.contact_map[display] = c[0]
-        self.contact_combo['values'] = values
+
+        if values:
+            self.entries['contact_combo'].configure(values=values)
+            self.entries['contact_combo'].set(values[0])
+        else:
+            self.entries['contact_combo'].configure(values=["No Contacts Found"])
+            self.entries['contact_combo'].set("No Contacts Found")
 
     def submit(self):
-        contact_name = self.contact_combo.get()
+        contact_name = self.entries['contact_combo'].get()
         if not contact_name or contact_name not in self.contact_map:
             messagebox.showerror("Error", "Please select a valid contact.")
             return
 
         data = {
-            'make': self.make_entry.get(),
-            'model': self.model_entry.get(),
-            'serial_number': self.serial_entry.get(),
-            'type': self.type_combo.get(),
-            'caliber': self.caliber_entry.get(),
-            'importer': self.importer_entry.get(),
-            'condition': "New", # Defaulting for now
-            'upc': self.upc_entry.get(),
-            'acquisition_date': self.date_entry.get()
+            'make': self.entries['make_entry'].get(),
+            'model': self.entries['model_entry'].get(),
+            'serial_number': self.entries['serial_entry'].get(),
+            'type': self.entries['type_combo'].get(),
+            'caliber': self.entries['caliber_entry'].get(),
+            'importer': self.entries['importer_entry'].get(),
+            'condition': "New",
+            'upc': self.entries['upc_entry'].get(),
+            'acquisition_date': self.entries['date_entry'].get()
         }
 
         if not all([data['make'], data['model'], data['serial_number'], data['type'], data['caliber']]):
@@ -118,9 +113,10 @@ class AcquisitionView(ttk.Frame):
         try:
             add_acquisition(data, self.contact_map[contact_name])
             messagebox.showinfo("Success", "Firearm acquired successfully.")
-
-            # Clear form
-            self.serial_entry.delete(0, 'end')
-            # Keep other fields as user might be entering batch
+            self.entries['serial_entry'].delete(0, 'end')
         except Exception as e:
             messagebox.showerror("Error", f"Failed to acquire firearm: {e}")
+
+    def open_bulk_dialog(self):
+        from ffl_suite.gui.views.bulk_acquisition_dialog import BulkAcquisitionDialog
+        BulkAcquisitionDialog(self)

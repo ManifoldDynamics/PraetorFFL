@@ -1,13 +1,16 @@
-import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+import customtkinter as ctk
+from tkinter import messagebox
 from ffl_suite.reports.pdf_generator import generate_4473_pdf
 from ffl_suite.logic.settings_manager import get_ffl_info
 
-class Wizard4473(tk.Toplevel):
+class Wizard4473(ctk.CTkToplevel):
     def __init__(self, parent_view, firearm_id, firearm_data, contact_name, contact_id):
         super().__init__(parent_view)
         self.title("Form 4473 Wizard")
-        self.geometry("600x700")
+        self.geometry("700x800")
+
+        # Make modal
+        self.attributes("-topmost", True)
 
         self.firearm_data = firearm_data
         self.contact_name = contact_name
@@ -17,26 +20,14 @@ class Wizard4473(tk.Toplevel):
         self.create_widgets()
 
     def create_widgets(self):
-        main_frame = ttk.Frame(self, padding=20)
-        main_frame.pack(fill='both', expand=True)
+        main_frame = ctk.CTkFrame(self)
+        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
 
-        ttk.Label(main_frame, text="ATF Form 4473 - Transferee Questions", font=("Arial", 14, "bold")).pack(pady=10)
+        ctk.CTkLabel(main_frame, text="ATF Form 4473 - Transferee Questions", font=ctk.CTkFont(size=18, weight="bold")).pack(pady=20)
 
         # Scrollable frame for questions
-        canvas = tk.Canvas(main_frame)
-        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
-        scroll_frame = ttk.Frame(canvas)
-
-        scroll_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-
-        canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        scroll_frame = ctk.CTkScrollableFrame(main_frame)
+        scroll_frame.pack(fill='both', expand=True, padx=10, pady=10)
 
         # Questions 21.a - 21.m (Simplified text)
         questions = [
@@ -56,27 +47,26 @@ class Wizard4473(tk.Toplevel):
         ]
 
         self.vars = {}
-        row = 0
         for q_id, q_text in questions:
-            q_frame = ttk.Frame(scroll_frame)
-            q_frame.pack(fill='x', pady=5)
+            q_frame = ctk.CTkFrame(scroll_frame, fg_color="transparent")
+            q_frame.pack(fill='x', pady=10)
 
-            lbl = ttk.Label(q_frame, text=f"{q_id}. {q_text}", wraplength=500)
+            lbl = ctk.CTkLabel(q_frame, text=f"{q_id}. {q_text}", wraplength=550, justify="left", anchor="w")
             lbl.pack(anchor='w')
 
-            var = tk.StringVar(value="No") # Default
+            var = ctk.StringVar(value="No")
             self.vars[q_id] = var
 
-            rb_frame = ttk.Frame(q_frame)
-            rb_frame.pack(anchor='w', padx=20)
-            ttk.Radiobutton(rb_frame, text="Yes", variable=var, value="Yes").pack(side='left', padx=5)
-            ttk.Radiobutton(rb_frame, text="No", variable=var, value="No").pack(side='left', padx=5)
-            row += 1
+            rb_frame = ctk.CTkFrame(q_frame, fg_color="transparent")
+            rb_frame.pack(anchor='w', padx=20, pady=5)
+
+            ctk.CTkRadioButton(rb_frame, text="Yes", variable=var, value="Yes").pack(side='left', padx=10)
+            ctk.CTkRadioButton(rb_frame, text="No", variable=var, value="No").pack(side='left', padx=10)
 
         # Action Buttons
-        btn_frame = ttk.Frame(main_frame)
+        btn_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         btn_frame.pack(fill='x', pady=20)
-        ttk.Button(btn_frame, text="Generate PDF", command=self.generate).pack(side='right')
+        ctk.CTkButton(btn_frame, text="Generate PDF", command=self.generate).pack(side='right')
 
     def generate(self):
         # Collect answers
@@ -84,7 +74,6 @@ class Wizard4473(tk.Toplevel):
             self.answers[q_id] = var.get()
 
         # Basic validation logic (simplified)
-        # 21.a must be Yes, most others No.
         if self.answers.get('21.a') == "No":
             messagebox.showwarning("Warning", "Question 21.a is 'No'. Transaction typically prohibited.")
 
@@ -92,6 +81,7 @@ class Wizard4473(tk.Toplevel):
         buyer_data = {'name': self.contact_name}
         ffl_data = get_ffl_info()
 
+        from tkinter import filedialog
         filename = filedialog.asksaveasfilename(defaultextension=".pdf", initialfile=f"4473_{self.firearm_data['serial']}.pdf")
         if filename:
             try:

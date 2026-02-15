@@ -1,8 +1,8 @@
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import ttk, messagebox
 from ffl_suite.logic.settings_manager import get_ffl_info, set_setting
 
-class SettingsView(ttk.Frame):
+class SettingsView(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.pack(expand=True, fill='both')
@@ -10,31 +10,40 @@ class SettingsView(ttk.Frame):
         self.load_settings()
 
     def create_widgets(self):
-        ttk.Label(self, text="FFL Information", font=("Arial", 14, "bold")).pack(pady=10)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
-        form_frame = ttk.Frame(self)
+        main_frame = ctk.CTkFrame(self)
+        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+
+        ctk.CTkLabel(main_frame, text="FFL Information", font=ctk.CTkFont(size=20, weight="bold")).pack(pady=20)
+
+        form_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         form_frame.pack(padx=20, pady=10)
 
-        ttk.Label(form_frame, text="Licensee Name:").grid(row=0, column=0, sticky="e", padx=5, pady=5)
-        self.name_entry = ttk.Entry(form_frame, width=40)
-        self.name_entry.grid(row=0, column=1, sticky="w", padx=5, pady=5)
+        ctk.CTkLabel(form_frame, text="Licensee Name:").grid(row=0, column=0, sticky="e", padx=10, pady=10)
+        self.name_entry = ctk.CTkEntry(form_frame, width=300)
+        self.name_entry.grid(row=0, column=1, sticky="w", padx=10, pady=10)
 
-        ttk.Label(form_frame, text="License Number:").grid(row=1, column=0, sticky="e", padx=5, pady=5)
-        self.license_entry = ttk.Entry(form_frame, width=40)
-        self.license_entry.grid(row=1, column=1, sticky="w", padx=5, pady=5)
+        ctk.CTkLabel(form_frame, text="License Number:").grid(row=1, column=0, sticky="e", padx=10, pady=10)
+        self.license_entry = ctk.CTkEntry(form_frame, width=300)
+        self.license_entry.grid(row=1, column=1, sticky="w", padx=10, pady=10)
 
-        ttk.Label(form_frame, text="Premise Address:").grid(row=2, column=0, sticky="e", padx=5, pady=5)
-        self.address_entry = ttk.Entry(form_frame, width=40)
-        self.address_entry.grid(row=2, column=1, sticky="w", padx=5, pady=5)
+        ctk.CTkLabel(form_frame, text="Premise Address:").grid(row=2, column=0, sticky="e", padx=10, pady=10)
+        self.address_entry = ctk.CTkEntry(form_frame, width=300)
+        self.address_entry.grid(row=2, column=1, sticky="w", padx=10, pady=10)
 
-        ttk.Button(self, text="Save Settings", command=self.save_settings).pack(pady=20)
+        ctk.CTkButton(main_frame, text="Save Settings", command=self.save_settings).pack(pady=20)
 
         # Data Management
-        data_frame = ttk.LabelFrame(self, text="Data Management")
-        data_frame.pack(fill='x', padx=20, pady=10)
+        data_frame = ctk.CTkFrame(main_frame)
+        data_frame.pack(fill='x', padx=20, pady=20)
+        ctk.CTkLabel(data_frame, text="Data Management", font=ctk.CTkFont(size=14, weight="bold")).pack(pady=10)
 
-        ttk.Button(data_frame, text="Backup Database", command=self.backup_db).pack(side='left', padx=10, pady=10)
-        ttk.Button(data_frame, text="Export Contacts (CSV)", command=self.export_contacts).pack(side='left', padx=10, pady=10)
+        btn_frame = ctk.CTkFrame(data_frame, fg_color="transparent")
+        btn_frame.pack(pady=10)
+        ctk.CTkButton(btn_frame, text="Backup Database", command=self.backup_db).pack(side='left', padx=10)
+        ctk.CTkButton(btn_frame, text="Export Contacts (CSV)", command=self.export_contacts).pack(side='left', padx=10)
 
     def backup_db(self):
         from ffl_suite.logic.data.backup_manager import create_backup
