@@ -75,3 +75,57 @@ CREATE TABLE IF NOT EXISTS transactions_4473 (
 
     FOREIGN KEY (firearm_id) REFERENCES firearms(id)
 );
+
+CREATE TABLE IF NOT EXISTS nfa_entities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_type TEXT NOT NULL, -- Individual, Trust, Corporation
+    name TEXT NOT NULL,
+    address_street TEXT,
+    address_city TEXT,
+    address_state TEXT,
+    address_zip TEXT,
+    phone TEXT,
+    email TEXT
+);
+
+CREATE TABLE IF NOT EXISTS responsible_persons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_id INTEGER NOT NULL,
+    first_name TEXT NOT NULL,
+    middle_name TEXT,
+    last_name TEXT NOT NULL,
+    title TEXT, -- Trustee, Beneficiary, etc.
+    dob TEXT,
+    pob_city TEXT,
+    pob_state TEXT,
+    pob_country TEXT,
+    ssn TEXT, -- Stored plain text locally for MVP
+    upin TEXT,
+    photo_path TEXT, -- Path to local photo file
+    fingerprint_path TEXT, -- Path to local fingerprint file (EFT/Card)
+
+    FOREIGN KEY (entity_id) REFERENCES nfa_entities(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS nfa_forms (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    form_type TEXT NOT NULL, -- Form 1, Form 4
+    status TEXT DEFAULT 'Draft', -- Draft, Pending, Approved, Denied
+    submitted_date TEXT,
+    approved_date TEXT,
+    control_number TEXT,
+
+    transferee_entity_id INTEGER,
+    firearm_id INTEGER,
+
+    cleo_name TEXT,
+    cleo_title TEXT,
+    cleo_agency TEXT,
+    cleo_address_street TEXT,
+    cleo_address_city TEXT,
+    cleo_address_state TEXT,
+    cleo_address_zip TEXT,
+
+    FOREIGN KEY (transferee_entity_id) REFERENCES nfa_entities(id),
+    FOREIGN KEY (firearm_id) REFERENCES firearms(id)
+);

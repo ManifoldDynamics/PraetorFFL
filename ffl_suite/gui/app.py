@@ -10,6 +10,7 @@ from ffl_suite.gui.views.bound_book_view import BoundBookView
 from ffl_suite.gui.views.contacts_view import ContactsView
 from ffl_suite.gui.views.settings_view import SettingsView
 from ffl_suite.gui.views.forms_4473_view import Forms4473View
+from ffl_suite.gui.views.nfa_vault_view import NFAVaultView
 
 ctk.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
 ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -46,7 +47,7 @@ class App(ctk.CTk):
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
 
         self.nav_buttons = {}
-        buttons = ["Dashboard", "Acquisition", "Disposition", "Bound Book", "4473 Forms", "Contacts", "Settings"]
+        buttons = ["Dashboard", "Acquisition", "Disposition", "Bound Book", "4473 Forms", "NFA Vault", "Contacts", "Settings"]
 
         for i, name in enumerate(buttons):
             btn = ctk.CTkButton(self.sidebar_frame, corner_radius=0, height=40, border_spacing=10, text=name,
@@ -93,6 +94,8 @@ class App(ctk.CTk):
                 self.views[name] = BoundBookView(self.main_frame)
             elif name == "4473 Forms":
                 self.views[name] = Forms4473View(self.main_frame)
+            elif name == "NFA Vault":
+                self.views[name] = NFAVaultView(self.main_frame)
             elif name == "Contacts":
                 self.views[name] = ContactsView(self.main_frame)
             elif name == "Settings":
