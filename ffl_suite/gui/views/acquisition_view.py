@@ -98,6 +98,17 @@ class AcquisitionView(ctk.CTkFrame):
 
         ctk.CTkButton(btn_frame, text="Record Acquisition", height=40, font=ctk.CTkFont(weight="bold"), command=self.submit).pack(side='left', padx=10)
         ctk.CTkButton(btn_frame, text="Bulk Acquisition", height=40, fg_color="gray", command=self.open_bulk_dialog).pack(side='left', padx=10)
+        ctk.CTkButton(btn_frame, text="Print Label", height=40, fg_color="#E0aaff", text_color="black", command=self.print_label).pack(side='left', padx=10)
+
+    def print_label(self):
+        # MVP: Generate text file acting as ZPL or just info
+        make = self.entries['make_entry'].get()
+        model = self.entries['model_entry'].get()
+        serial = self.entries['serial_entry'].get()
+        if not serial: return
+
+        info = f"{make} {model}\nSN: {serial}"
+        messagebox.showinfo("Label Sent", f"Printing Label:\n{info}\n(ZPL/Dymo integration placeholder)")
 
     def load_contacts(self):
         sql = "SELECT id, name, license_number FROM contacts"

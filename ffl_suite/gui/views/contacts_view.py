@@ -49,6 +49,43 @@ class ContactsView(ctk.CTkFrame):
         self.tree.configure(yscroll=scrollbar.set)
         scrollbar.pack(side='right', fill='y')
         self.tree.pack(side='left', expand=True, fill='both')
+        self.tree.bind('<<TreeviewSelect>>', self.on_select)
+
+        # Details Panel
+        self.details_frame = ctk.CTkFrame(self, height=200)
+        self.details_frame.pack(fill='x', padx=20, pady=10)
+
+        self.notes_text = ctk.CTkTextbox(self.details_frame, height=80)
+        self.notes_text.pack(fill='x', padx=10, pady=5)
+
+        ctk.CTkButton(self.details_frame, text="Upload CCW", command=self.upload_ccw).pack(side='left', padx=10, pady=5)
+        ctk.CTkButton(self.details_frame, text="Save Notes", command=self.save_notes).pack(side='left', padx=10, pady=5)
+
+    def on_select(self, event):
+        sel = self.tree.selection()
+        if sel:
+            item = self.tree.item(sel[0])
+            self.selected_id = item['values'][0]
+            # Load notes (MVP: re-query db)
+            # For now just clear
+            self.notes_text.delete("1.0", "end")
+            self.notes_text.insert("1.0", f"Notes for Contact #{self.selected_id}...")
+
+    def upload_ccw(self):
+        if not hasattr(self, 'selected_id'): return
+        from tkinter import filedialog
+        path = filedialog.askopenfilename(filetypes=[("Images", "*.jpg *.png *.pdf")])
+        if path:
+            from ffl_suite.database.db_manager import execute_query
+            execute_query("UPDATE contacts SET ccw_path = ? WHERE id = ?", (path, self.selected_id))
+            messagebox.showinfo("Success", "CCW Linked")
+
+    def save_notes(self):
+        if not hasattr(self, 'selected_id'): return
+        notes = self.notes_text.get("1.0", "end")
+        from ffl_suite.database.db_manager import execute_query
+        execute_query("UPDATE contacts SET notes = ? WHERE id = ?", (notes, self.selected_id))
+        messagebox.showinfo("Success", "Notes Saved")
 
     def load_contacts(self):
         for item in self.tree.get_children():

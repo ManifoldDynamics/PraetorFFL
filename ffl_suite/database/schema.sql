@@ -13,7 +13,9 @@ CREATE TABLE IF NOT EXISTS contacts (
     license_number TEXT,
     phone TEXT,
     email TEXT,
-    is_ffl BOOLEAN DEFAULT 0
+    is_ffl BOOLEAN DEFAULT 0,
+    ccw_path TEXT,
+    notes TEXT
 );
 
 CREATE TABLE IF NOT EXISTS firearms (
@@ -128,4 +130,63 @@ CREATE TABLE IF NOT EXISTS nfa_forms (
 
     FOREIGN KEY (transferee_entity_id) REFERENCES nfa_entities(id),
     FOREIGN KEY (firearm_id) REFERENCES firearms(id)
+);
+
+-- Gunsmithing
+CREATE TABLE IF NOT EXISTS gunsmith_jobs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER,
+    firearm_id INTEGER, -- Link to inventory if acquired, or just description if immediate return
+    description TEXT,
+    status TEXT, -- Intake, In Progress, Waiting Parts, Completed, Delivered
+    intake_date TEXT,
+    completed_date TEXT,
+    notes TEXT,
+    FOREIGN KEY (customer_id) REFERENCES contacts(id),
+    FOREIGN KEY (firearm_id) REFERENCES firearms(id)
+);
+
+CREATE TABLE IF NOT EXISTS job_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id INTEGER,
+    item_type TEXT, -- Part, Labor
+    description TEXT,
+    quantity REAL,
+    cost_per_unit REAL,
+    price_per_unit REAL,
+    FOREIGN KEY (job_id) REFERENCES gunsmith_jobs(id)
+);
+
+-- CRM / PO
+CREATE TABLE IF NOT EXISTS purchase_orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vendor_id INTEGER,
+    order_date TEXT,
+    expected_date TEXT,
+    status TEXT, -- Draft, Ordered, Partial, Received
+    notes TEXT,
+    FOREIGN KEY (vendor_id) REFERENCES contacts(id)
+);
+
+CREATE TABLE IF NOT EXISTS po_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    po_id INTEGER,
+    description TEXT,
+    make TEXT,
+    model TEXT,
+    upc TEXT,
+    quantity_ordered INTEGER,
+    quantity_received INTEGER DEFAULT 0,
+    cost REAL,
+    FOREIGN KEY (po_id) REFERENCES purchase_orders(id)
+);
+
+-- Profiles (Multi-FFL) - Schema enhancement for settings
+-- We will store profile data in 'settings' table with prefixes, e.g., "profile_1_name", "profile_2_name"
+-- Or better, a profiles table if we want robust switching.
+CREATE TABLE IF NOT EXISTS profiles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    license_number TEXT,
+    premise_address TEXT
 );

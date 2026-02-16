@@ -20,8 +20,6 @@ def get_nfa_entity_details(entity_id):
     sql = "SELECT * FROM nfa_entities WHERE id = ?"
     res = execute_query(sql, (entity_id,), fetch=True)
     return res[0] if res else None
-    sql = "SELECT id, name, entity_type FROM nfa_entities ORDER BY name"
-    return execute_query(sql, fetch=True)
 
 def add_responsible_person(entity_id, data):
     """Adds a Responsible Person to an entity."""

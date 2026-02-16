@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import sys
 
 DB_FILE = 'ffl_data.db'
 
@@ -9,9 +10,18 @@ def get_connection():
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.dirname(__file__)
+    return os.path.join(base_path, relative_path)
+
 def init_db():
     """Initializes the database by running the schema script."""
-    schema_path = os.path.join(os.path.dirname(__file__), 'schema.sql')
+    schema_path = get_resource_path('schema.sql')
 
     conn = get_connection()
     cursor = conn.cursor()

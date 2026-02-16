@@ -45,6 +45,23 @@ class SettingsView(ctk.CTkFrame):
         ctk.CTkButton(btn_frame, text="Backup Database", command=self.backup_db).pack(side='left', padx=10)
         ctk.CTkButton(btn_frame, text="Export Contacts (CSV)", command=self.export_contacts).pack(side='left', padx=10)
 
+        # Profiles
+        prof_frame = ctk.CTkFrame(main_frame)
+        prof_frame.pack(fill='x', padx=20, pady=20)
+        ctk.CTkLabel(prof_frame, text="FFL Profiles", font=ctk.CTkFont(size=14, weight="bold")).pack(pady=10)
+
+        self.prof_combo = ctk.CTkComboBox(prof_frame, values=["Default"])
+        self.prof_combo.pack(pady=5)
+
+        ctk.CTkButton(prof_frame, text="Add Current as New Profile", command=self.add_profile).pack(pady=10)
+
+    def add_profile(self):
+        from ffl_suite.logic.profile_manager import add_profile
+        name = self.name_entry.get()
+        if name:
+            add_profile(name, self.license_entry.get(), self.address_entry.get())
+            messagebox.showinfo("Success", "Profile Added")
+
     def backup_db(self):
         from ffl_suite.logic.data.backup_manager import create_backup
         path = create_backup()

@@ -61,18 +61,6 @@ class BoundBookView(ctk.CTkFrame):
                 if values[9] is None: values[9] = ""
                 self.tree.insert('', 'end', values=values)
 
-    def load_data(self):
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-        data = get_bound_book()
-        if data:
-            for row in data:
-                values = list(row)
-                if values[7] is None: values[7] = "Unknown"
-                if values[8] is None: values[8] = ""
-                if values[9] is None: values[9] = ""
-                self.tree.insert('', 'end', values=values)
-
     def export_pdf(self):
         from tkinter import filedialog
         filename = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF files", "*.pdf")])
