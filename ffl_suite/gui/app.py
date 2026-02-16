@@ -11,6 +11,9 @@ from ffl_suite.gui.views.contacts_view import ContactsView
 from ffl_suite.gui.views.settings_view import SettingsView
 from ffl_suite.gui.views.forms_4473_view import Forms4473View
 from ffl_suite.gui.views.nfa_vault_view import NFAVaultView
+from ffl_suite.gui.views.gunsmithing_view import GunsmithingView
+from ffl_suite.gui.views.po_view import POView
+from ffl_suite.gui.views.inventory_view import InventoryView
 
 ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -49,11 +52,14 @@ class App(ctk.CTk):
         self.nav_buttons = {}
         buttons = [
             ("Dashboard", "🏠"),
+            ("Inventory", "📦"),
             ("Acquisition", "➕"),
             ("Disposition", "➖"),
             ("Bound Book", "📖"),
-            ("4473 Forms", "📝"),
+            ("Gunsmithing", "🔨"),
+            ("Ordering", "🛒"),
             ("NFA Vault", "🔐"),
+            ("4473 Forms", "📝"),
             ("Contacts", "👥"),
             ("Settings", "⚙️")
         ]
@@ -96,6 +102,8 @@ class App(ctk.CTk):
         if name not in self.views:
             if name == "Dashboard":
                 self.views[name] = DashboardView(self.main_frame)
+            elif name == "Inventory":
+                self.views[name] = InventoryView(self.main_frame)
             elif name == "Acquisition":
                 self.views[name] = AcquisitionView(self.main_frame)
             elif name == "Disposition":
@@ -106,6 +114,10 @@ class App(ctk.CTk):
                 self.views[name] = Forms4473View(self.main_frame)
             elif name == "NFA Vault":
                 self.views[name] = NFAVaultView(self.main_frame)
+            elif name == "Gunsmithing":
+                self.views[name] = GunsmithingView(self.main_frame)
+            elif name == "Ordering":
+                self.views[name] = POView(self.main_frame)
             elif name == "Contacts":
                 self.views[name] = ContactsView(self.main_frame)
             elif name == "Settings":
