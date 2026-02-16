@@ -14,9 +14,12 @@ from ffl_suite.gui.views.nfa_vault_view import NFAVaultView
 from ffl_suite.gui.views.gunsmithing_view import GunsmithingView
 from ffl_suite.gui.views.po_view import POView
 from ffl_suite.gui.views.inventory_view import InventoryView
+import os
 
-ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
-ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
+# Load custom theme
+theme_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'assets', 'themes', 'modern_saas.json')
+ctk.set_default_color_theme(theme_path)
+ctk.set_appearance_mode("Dark")
 
 class App(ctk.CTk):
     def __init__(self):
@@ -42,12 +45,16 @@ class App(ctk.CTk):
         self.check_initial_setup()
 
     def create_sidebar(self):
-        self.sidebar_frame = ctk.CTkFrame(self, width=250, corner_radius=0)
+        # Modern Floating Sidebar look
+        self.sidebar_frame = ctk.CTkFrame(self, width=260, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(8, weight=1)
+        self.sidebar_frame.grid_rowconfigure(12, weight=1)
 
-        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="FFL Suite", font=ctk.CTkFont(size=24, weight="bold"))
-        self.logo_label.grid(row=0, column=0, padx=20, pady=(30, 20))
+        # Logo Area
+        logo_frame = ctk.CTkFrame(self.sidebar_frame, fg_color="transparent")
+        logo_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=30)
+        ctk.CTkLabel(logo_frame, text="⚡", font=ctk.CTkFont(size=32)).pack(side="left")
+        ctk.CTkLabel(logo_frame, text="FFL Suite", font=ctk.CTkFont(size=24, weight="bold")).pack(side="left", padx=10)
 
         self.nav_buttons = {}
         buttons = [
@@ -65,34 +72,47 @@ class App(ctk.CTk):
         ]
 
         for i, (name, icon) in enumerate(buttons):
-            btn = ctk.CTkButton(self.sidebar_frame, corner_radius=0, height=50, border_spacing=15,
-                                text=f"  {icon}  {name}", font=ctk.CTkFont(size=14, weight="bold"),
-                                fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
+            # Using styled buttons from theme
+            btn = ctk.CTkButton(self.sidebar_frame, corner_radius=10, height=45, border_spacing=15,
+                                text=f"{icon}   {name}", font=ctk.CTkFont(size=14, weight="bold"),
+                                fg_color="transparent", text_color=("gray50", "gray30"), hover_color=("gray90", "gray20"),
                                 anchor="w", command=lambda n=name: self.show_view(n))
-            btn.grid(row=i+1, column=0, sticky="ew")
+            btn.grid(row=i+1, column=0, sticky="ew", padx=15, pady=2)
             self.nav_buttons[name] = btn
 
-        # Appearance Mode
-        self.appearance_mode_label = ctk.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
-        self.appearance_mode_label.grid(row=9, column=0, padx=20, pady=(10, 0))
-        self.appearance_mode_optionemenu = ctk.CTkOptionMenu(self.sidebar_frame, values=["Light", "Dark", "System"],
-                                                               command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=10, column=0, padx=20, pady=(10, 30))
-        self.appearance_mode_optionemenu.set("Dark")
+        # User/Footer area
+        footer_frame = ctk.CTkFrame(self.sidebar_frame, fg_color=("gray95", "gray10"), corner_radius=10)
+        footer_frame.grid(row=13, column=0, sticky="ew", padx=15, pady=20)
+        ctk.CTkLabel(footer_frame, text="Active Profile:", font=ctk.CTkFont(size=10)).pack(anchor="w", padx=10, pady=(5,0))
+        self.profile_label = ctk.CTkLabel(footer_frame, text=get_ffl_info().get('name', 'Default'), font=ctk.CTkFont(size=12, weight="bold"))
+        self.profile_label.pack(anchor="w", padx=10, pady=(0,5))
 
     def create_main_area(self):
-        self.main_frame = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
+        # Use a background color for the main area to distinct from sidebar
+        self.main_frame = ctk.CTkFrame(self, corner_radius=0, fg_color=("gray95", "#141414"))
         self.main_frame.grid(row=0, column=1, rowspan=4, sticky="nsew", padx=0, pady=0)
         self.main_frame.grid_columnconfigure(0, weight=1)
-        self.main_frame.grid_rowconfigure(0, weight=1)
+        self.main_frame.grid_rowconfigure(1, weight=1) # Row 1 is content, Row 0 is header
+
+        # Persistent Header
+        self.header_frame = ctk.CTkFrame(self.main_frame, height=60, fg_color="transparent")
+        self.header_frame.grid(row=0, column=0, sticky="ew", padx=30, pady=(30, 10))
+        self.page_title = ctk.CTkLabel(self.header_frame, text="Dashboard", font=ctk.CTkFont(size=28, weight="bold"))
+        self.page_title.pack(side="left")
+
+        self.content_area = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        self.content_area.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
 
     def show_view(self, name):
-        # Update button states
+        # Update button states (Active Indicator)
         for btn_name, btn in self.nav_buttons.items():
             if btn_name == name:
-                btn.configure(fg_color=("gray75", "gray25"))
+                btn.configure(fg_color=("white", "#1e293b"), text_color=("#3b82f6", "#3b82f6"))
             else:
-                btn.configure(fg_color="transparent")
+                btn.configure(fg_color="transparent", text_color=("gray50", "gray40"))
+
+        # Update Page Title
+        self.page_title.configure(text=name)
 
         # Hide current view
         if self.current_view:
@@ -101,30 +121,31 @@ class App(ctk.CTk):
         # Create or show view
         if name not in self.views:
             if name == "Dashboard":
-                self.views[name] = DashboardView(self.main_frame)
+                self.views[name] = DashboardView(self.content_area)
             elif name == "Inventory":
-                self.views[name] = InventoryView(self.main_frame)
+                self.views[name] = InventoryView(self.content_area)
             elif name == "Acquisition":
-                self.views[name] = AcquisitionView(self.main_frame)
+                self.views[name] = AcquisitionView(self.content_area)
             elif name == "Disposition":
-                self.views[name] = DispositionView(self.main_frame)
+                self.views[name] = DispositionView(self.content_area)
             elif name == "Bound Book":
-                self.views[name] = BoundBookView(self.main_frame)
+                self.views[name] = BoundBookView(self.content_area)
             elif name == "4473 Forms":
-                self.views[name] = Forms4473View(self.main_frame)
+                self.views[name] = Forms4473View(self.content_area)
             elif name == "NFA Vault":
-                self.views[name] = NFAVaultView(self.main_frame)
+                self.views[name] = NFAVaultView(self.content_area)
             elif name == "Gunsmithing":
-                self.views[name] = GunsmithingView(self.main_frame)
+                self.views[name] = GunsmithingView(self.content_area)
             elif name == "Ordering":
-                self.views[name] = POView(self.main_frame)
+                self.views[name] = POView(self.content_area)
             elif name == "Contacts":
-                self.views[name] = ContactsView(self.main_frame)
+                self.views[name] = ContactsView(self.content_area)
             elif name == "Settings":
-                self.views[name] = SettingsView(self.main_frame)
+                self.views[name] = SettingsView(self.content_area)
 
         self.current_view = self.views[name]
         self.current_view.pack(expand=True, fill="both")
+
 
         # Trigger refresh if applicable
         if hasattr(self.current_view, 'load_data'):

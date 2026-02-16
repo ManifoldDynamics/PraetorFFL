@@ -10,5 +10,7 @@ PyInstaller.__main__.run([
     '--onefile',
     '--windowed',
     f'--add-data=ffl_suite/database/schema.sql{separator}ffl_suite/database',
+    f'--add-data=ffl_suite/assets/themes/modern_saas.json{separator}ffl_suite/assets/themes',
+    '--collect-all=customtkinter',
     '--clean',
 ])
