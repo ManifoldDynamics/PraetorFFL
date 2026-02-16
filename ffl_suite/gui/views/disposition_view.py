@@ -14,66 +14,71 @@ class DispositionView(ctk.CTkFrame):
         self.contact_map = {}
 
     def create_widgets(self):
-        # Top: Search
-        search_frame = ctk.CTkFrame(self)
-        search_frame.pack(fill='x', padx=20, pady=20)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
 
-        ctk.CTkLabel(search_frame, text="Search Inventory:").pack(side='left', padx=10)
-        self.search_entry = ctk.CTkEntry(search_frame, width=300)
+        # 1. Search Card
+        search_frame = ctk.CTkFrame(self, corner_radius=10)
+        search_frame.pack(fill='x', padx=10, pady=10)
+
+        ctk.CTkLabel(search_frame, text="Search Inventory", font=ctk.CTkFont(size=16, weight="bold")).pack(side='left', padx=15, pady=10)
+        self.search_entry = ctk.CTkEntry(search_frame, width=300, placeholder_text="Enter serial, make, model...")
         self.search_entry.pack(side='left', fill='x', expand=True, padx=10)
         self.search_entry.bind('<Return>', self.perform_search)
-        ctk.CTkButton(search_frame, text="Search", command=self.perform_search).pack(side='left', padx=10)
+        ctk.CTkButton(search_frame, text="Search", width=100, command=self.perform_search).pack(side='right', padx=15, pady=10)
 
-        # Middle: Treeview (Using standard Tkinter treeview for now wrapped in CTK Frame)
-        # Note: CustomTkinter doesn't have a Treeview yet.
+        # 2. Results Area (Treeview)
+        tree_container = ctk.CTkFrame(self, fg_color="transparent")
+        tree_container.pack(fill='both', expand=True, padx=10, pady=5)
+
         import tkinter as tk
         from tkinter import ttk
 
-        tree_frame = ctk.CTkFrame(self)
-        tree_frame.pack(expand=True, fill='both', padx=20, pady=10)
-
-        # Style treeview to match dark mode somewhat
+        # Style treeview
         style = ttk.Style()
         style.theme_use("clam")
-        style.configure("Treeview", background="#2b2b2b", fieldbackground="#2b2b2b", foreground="white")
+        style.configure("Treeview", background="#2b2b2b", fieldbackground="#2b2b2b", foreground="white", rowheight=25, font=('Arial', 10))
+        style.configure("Treeview.Heading", font=('Arial', 11, 'bold'))
         style.map("Treeview", background=[('selected', '#1f538d')])
 
         columns = ('id', 'make', 'model', 'serial', 'type', 'caliber')
-        self.tree = ttk.Treeview(tree_frame, columns=columns, show='headings', height=10)
+        self.tree = ttk.Treeview(tree_container, columns=columns, show='headings')
         for col in columns:
             self.tree.heading(col, text=col.title())
             self.tree.column(col, width=100)
 
-        # Scrollbar
-        scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
+        scrollbar = ttk.Scrollbar(tree_container, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscroll=scrollbar.set)
         scrollbar.pack(side='right', fill='y')
         self.tree.pack(side='left', expand=True, fill='both')
         self.tree.bind('<<TreeviewSelect>>', self.on_select_firearm)
 
-        # Bottom: Disposition Form
-        form_frame = ctk.CTkFrame(self)
-        form_frame.pack(fill='x', padx=20, pady=20)
+        # 3. Disposition Form Card
+        form_frame = ctk.CTkFrame(self, corner_radius=10)
+        form_frame.pack(fill='x', padx=10, pady=10)
 
-        ctk.CTkLabel(form_frame, text="Disposition Details", font=ctk.CTkFont(size=16, weight="bold")).grid(row=0, column=0, columnspan=2, pady=10)
+        ctk.CTkLabel(form_frame, text="Disposition Details", font=ctk.CTkFont(size=16, weight="bold")).pack(anchor='w', padx=15, pady=10)
 
-        ctk.CTkLabel(form_frame, text="Disposed To:").grid(row=1, column=0, sticky='e', padx=10, pady=5)
-        self.contact_combo = ctk.CTkComboBox(form_frame, width=300, values=["No Contacts"])
-        self.contact_combo.grid(row=1, column=1, sticky='w', padx=10, pady=5)
+        grid_frame = ctk.CTkFrame(form_frame, fg_color="transparent")
+        grid_frame.pack(fill='x', padx=10)
 
-        ctk.CTkLabel(form_frame, text="Date (YYYY-MM-DD):").grid(row=2, column=0, sticky='e', padx=10, pady=5)
-        self.date_entry = ctk.CTkEntry(form_frame, width=300)
+        ctk.CTkLabel(grid_frame, text="Disposed To").grid(row=0, column=0, sticky='w', padx=5)
+        self.contact_combo = ctk.CTkComboBox(grid_frame, width=300, values=["No Contacts"])
+        self.contact_combo.grid(row=1, column=0, sticky='ew', padx=5, pady=5)
+
+        ctk.CTkLabel(grid_frame, text="Date (YYYY-MM-DD)").grid(row=0, column=1, sticky='w', padx=5)
+        self.date_entry = ctk.CTkEntry(grid_frame, width=200)
         self.date_entry.insert(0, date.today().isoformat())
-        self.date_entry.grid(row=2, column=1, sticky='w', padx=10, pady=5)
+        self.date_entry.grid(row=1, column=1, sticky='ew', padx=5, pady=5)
 
         btn_frame = ctk.CTkFrame(form_frame, fg_color="transparent")
-        btn_frame.grid(row=3, column=0, columnspan=2, pady=20)
+        btn_frame.pack(fill='x', padx=10, pady=15)
 
-        self.dispose_btn = ctk.CTkButton(btn_frame, text="Confirm Disposition", command=self.submit_disposition, state='disabled')
-        self.dispose_btn.pack(side='left', padx=10)
+        self.print_btn = ctk.CTkButton(btn_frame, text="Launch 4473 Wizard", command=self.open_4473_wizard, state='disabled', fg_color="green")
+        self.print_btn.pack(side='right', padx=10)
 
-        self.print_btn = ctk.CTkButton(btn_frame, text="4473 Wizard", command=self.open_4473_wizard, state='disabled')
-        self.print_btn.pack(side='left', padx=10)
+        self.dispose_btn = ctk.CTkButton(btn_frame, text="Confirm Quick Disposition", command=self.submit_disposition, state='disabled', fg_color="red")
+        self.dispose_btn.pack(side='right', padx=10)
 
     def load_contacts(self):
         sql = "SELECT id, name, license_number FROM contacts"

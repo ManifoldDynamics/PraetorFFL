@@ -18,12 +18,12 @@ class NFAVaultView(ctk.CTkFrame):
         # Header
         header = ctk.CTkFrame(self, fg_color="transparent")
         header.pack(fill='x', padx=20, pady=20)
-        ctk.CTkLabel(header, text="NFA Vault & E-Forms Helper", font=ctk.CTkFont(size=20, weight="bold")).pack(side='left')
+        ctk.CTkLabel(header, text="NFA Vault & E-Forms Helper", font=ctk.CTkFont(size=24, weight="bold")).pack(side='left')
 
         btn_frame = ctk.CTkFrame(header, fg_color="transparent")
         btn_frame.pack(side='right')
-        ctk.CTkButton(btn_frame, text="New Entity", command=lambda: AddEntityDialog(self)).pack(side='left', padx=10)
-        ctk.CTkButton(btn_frame, text="Draft Form 4", command=self.open_form4_wizard).pack(side='left', padx=10)
+        ctk.CTkButton(btn_frame, text="New Entity", height=40, font=ctk.CTkFont(weight="bold"), command=lambda: AddEntityDialog(self)).pack(side='left', padx=10)
+        ctk.CTkButton(btn_frame, text="Draft Form 4", height=40, font=ctk.CTkFont(weight="bold"), command=self.open_form4_wizard).pack(side='left', padx=10)
 
         # Entities Tree
         tree_frame = ctk.CTkFrame(self)

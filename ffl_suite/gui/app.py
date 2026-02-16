@@ -12,7 +12,7 @@ from ffl_suite.gui.views.settings_view import SettingsView
 from ffl_suite.gui.views.forms_4473_view import Forms4473View
 from ffl_suite.gui.views.nfa_vault_view import NFAVaultView
 
-ctk.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
+ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 class App(ctk.CTk):
@@ -39,18 +39,28 @@ class App(ctk.CTk):
         self.check_initial_setup()
 
     def create_sidebar(self):
-        self.sidebar_frame = ctk.CTkFrame(self, width=200, corner_radius=0)
+        self.sidebar_frame = ctk.CTkFrame(self, width=250, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(7, weight=1)
+        self.sidebar_frame.grid_rowconfigure(8, weight=1)
 
-        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="FFL Suite", font=ctk.CTkFont(size=20, weight="bold"))
-        self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
+        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="FFL Suite", font=ctk.CTkFont(size=24, weight="bold"))
+        self.logo_label.grid(row=0, column=0, padx=20, pady=(30, 20))
 
         self.nav_buttons = {}
-        buttons = ["Dashboard", "Acquisition", "Disposition", "Bound Book", "4473 Forms", "NFA Vault", "Contacts", "Settings"]
+        buttons = [
+            ("Dashboard", "🏠"),
+            ("Acquisition", "➕"),
+            ("Disposition", "➖"),
+            ("Bound Book", "📖"),
+            ("4473 Forms", "📝"),
+            ("NFA Vault", "🔐"),
+            ("Contacts", "👥"),
+            ("Settings", "⚙️")
+        ]
 
-        for i, name in enumerate(buttons):
-            btn = ctk.CTkButton(self.sidebar_frame, corner_radius=0, height=40, border_spacing=10, text=name,
+        for i, (name, icon) in enumerate(buttons):
+            btn = ctk.CTkButton(self.sidebar_frame, corner_radius=0, height=50, border_spacing=15,
+                                text=f"  {icon}  {name}", font=ctk.CTkFont(size=14, weight="bold"),
                                 fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
                                 anchor="w", command=lambda n=name: self.show_view(n))
             btn.grid(row=i+1, column=0, sticky="ew")
@@ -58,15 +68,15 @@ class App(ctk.CTk):
 
         # Appearance Mode
         self.appearance_mode_label = ctk.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
-        self.appearance_mode_label.grid(row=8, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_label.grid(row=9, column=0, padx=20, pady=(10, 0))
         self.appearance_mode_optionemenu = ctk.CTkOptionMenu(self.sidebar_frame, values=["Light", "Dark", "System"],
                                                                command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=9, column=0, padx=20, pady=(10, 20))
-        self.appearance_mode_optionemenu.set("System")
+        self.appearance_mode_optionemenu.grid(row=10, column=0, padx=20, pady=(10, 30))
+        self.appearance_mode_optionemenu.set("Dark")
 
     def create_main_area(self):
         self.main_frame = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
-        self.main_frame.grid(row=0, column=1, rowspan=4, sticky="nsew", padx=20, pady=20)
+        self.main_frame.grid(row=0, column=1, rowspan=4, sticky="nsew", padx=0, pady=0)
         self.main_frame.grid_columnconfigure(0, weight=1)
         self.main_frame.grid_rowconfigure(0, weight=1)
 

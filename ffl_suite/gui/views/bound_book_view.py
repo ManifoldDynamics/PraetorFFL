@@ -18,13 +18,13 @@ class BoundBookView(ctk.CTkFrame):
         header_frame = ctk.CTkFrame(self, fg_color="transparent")
         header_frame.pack(fill='x', padx=20, pady=20)
 
-        ctk.CTkLabel(header_frame, text="Acquisition & Disposition Bound Book", font=ctk.CTkFont(size=20, weight="bold")).pack(side='left')
+        ctk.CTkLabel(header_frame, text="Acquisition & Disposition Bound Book", font=ctk.CTkFont(size=24, weight="bold")).pack(side='left')
 
         btn_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
         btn_frame.pack(side='right')
 
-        ctk.CTkButton(btn_frame, text="Export PDF", command=self.export_pdf).pack(side='left', padx=10)
-        ctk.CTkButton(btn_frame, text="Refresh", command=self.load_data).pack(side='left', padx=10)
+        ctk.CTkButton(btn_frame, text="Export PDF", height=40, font=ctk.CTkFont(weight="bold"), command=self.export_pdf).pack(side='left', padx=10)
+        ctk.CTkButton(btn_frame, text="Refresh", height=40, font=ctk.CTkFont(weight="bold"), command=self.load_data).pack(side='left', padx=10)
 
         # Treeview (Wrapped in Frame)
         tree_frame = ctk.CTkFrame(self)

@@ -14,9 +14,9 @@ class Forms4473View(ctk.CTkFrame):
         header_frame = ctk.CTkFrame(self, fg_color="transparent")
         header_frame.pack(fill='x', padx=20, pady=20)
 
-        ctk.CTkLabel(header_frame, text="4473 Forms Archive", font=ctk.CTkFont(size=20, weight="bold")).pack(side='left')
+        ctk.CTkLabel(header_frame, text="4473 Forms Archive", font=ctk.CTkFont(size=24, weight="bold")).pack(side='left')
 
-        ctk.CTkButton(header_frame, text="Refresh", command=self.load_data).pack(side='right', padx=10)
+        ctk.CTkButton(header_frame, text="Refresh", height=40, font=ctk.CTkFont(weight="bold"), command=self.load_data).pack(side='right', padx=10)
 
         # Treeview (Wrapped)
         tree_frame = ctk.CTkFrame(self)

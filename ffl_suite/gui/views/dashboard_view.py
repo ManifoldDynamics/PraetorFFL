@@ -28,30 +28,28 @@ class DashboardView(ctk.CTkFrame):
         self.create_card(1, 0, "Aged Inventory (>1 Yr)", "aged_count_label", warning=True)
 
         # Row 2: Recent Activity
-        activity_frame = ctk.CTkFrame(self)
+        activity_frame = ctk.CTkFrame(self, corner_radius=10)
         activity_frame.grid(row=2, column=0, columnspan=3, sticky='nsew', padx=20, pady=20)
 
-        ctk.CTkLabel(activity_frame, text="Recent Acquisitions", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
+        ctk.CTkLabel(activity_frame, text="Recent Acquisitions", font=ctk.CTkFont(size=18, weight="bold")).pack(pady=15)
 
         # Use a Text widget or series of labels for activity since CTK has no treeview yet
-        self.activity_container = ctk.CTkScrollableFrame(activity_frame)
-        self.activity_container.pack(expand=True, fill='both', padx=10, pady=10)
+        self.activity_container = ctk.CTkScrollableFrame(activity_frame, fg_color="transparent")
+        self.activity_container.pack(expand=True, fill='both', padx=15, pady=(0, 15))
 
         # Refresh Button
-        ctk.CTkButton(self, text="Refresh Dashboard", command=self.load_data).grid(row=3, column=0, columnspan=3, pady=10)
+        ctk.CTkButton(self, text="Refresh Dashboard", height=40, font=ctk.CTkFont(size=14, weight="bold"), command=self.load_data).grid(row=3, column=0, columnspan=3, pady=20)
 
     def create_card(self, row, col, title, attr_name, warning=False):
-        frame = ctk.CTkFrame(self)
+        frame = ctk.CTkFrame(self, corner_radius=10)
         frame.grid(row=row, column=col, sticky='nsew', padx=10, pady=10)
 
-        ctk.CTkLabel(frame, text=title, font=ctk.CTkFont(size=14, weight="bold")).pack(pady=(20, 5))
+        ctk.CTkLabel(frame, text=title, font=ctk.CTkFont(size=14, weight="bold"), text_color=("gray50", "gray70")).pack(pady=(20, 5))
 
-        color = "red" if warning else ("#3B8ED0" if ctk.get_appearance_mode()=="Light" else "#1F6AA5")
-        # In CTK we can set text_color dynamically or just rely on standard themes
         # For warning, explicit red is good.
-        text_color = "red" if warning else None
+        text_color = "#e63946" if warning else None # Red-ish
 
-        value_label = ctk.CTkLabel(frame, text="0", font=ctk.CTkFont(size=36, weight="bold"), text_color=text_color)
+        value_label = ctk.CTkLabel(frame, text="0", font=ctk.CTkFont(size=40, weight="bold"), text_color=text_color)
         value_label.pack(pady=10)
 
         setattr(self, attr_name, value_label)
