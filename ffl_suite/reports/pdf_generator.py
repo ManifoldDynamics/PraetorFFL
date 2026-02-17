@@ -134,27 +134,46 @@ def generate_4473_pdf(filepath, firearm_data, buyer_data, ffl_data, full_data=No
     pdf.cell(0, 6, f"Date: {d.get('certification_date', '')}", 0, 1)
 
     # Render signature points if available
-    sig_points = d.get('buyer_signature_svg')
-    if sig_points and sig_points != "[]":
+    sig_data = d.get('buyer_signature_svg')
+    if sig_data and sig_data.startswith('data:image'):
+        # It's a base64 image from HTML5 Canvas
+        try:
+            import base64
+            import tempfile
+            import os
+
+            # Decode
+            header, encoded = sig_data.split(",", 1)
+            data = base64.b64decode(encoded)
+
+            # Save temp
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+                tmp.write(data)
+                tmp_path = tmp.name
+
+            # Place on PDF
+            pdf.image(tmp_path, x=pdf.get_x(), y=pdf.get_y(), w=60)
+
+            # Cleanup
+            os.remove(tmp_path)
+        except Exception as e:
+            print(f"Sig Error: {e}")
+
+    elif sig_data and sig_data != "[]":
+        # Legacy points format
         try:
             # Parse string back to list of tuples
             import ast
-            points = ast.literal_eval(sig_points)
+            points = ast.literal_eval(sig_data)
             if points:
                 # Draw small representation
-                # Find bounding box to scale? Just plot relative to current Y
                 start_x = pdf.get_x() + 20
                 start_y = pdf.get_y() + 5
                 pdf.set_draw_color(0, 0, 139) # Dark Blue
-                # Naive plot: just dots or lines
-                # For PDF robustness, we usually create an image or draw lines.
-                # FPDF line(x1, y1, x2, y2). Points is just a list of dots from mouse move.
-                # Scale down: canvas was 400x150. Let's scale by 0.2
                 scale = 0.2
                 for i in range(len(points) - 1):
                      p1 = points[i]
                      p2 = points[i+1]
-                     # Check for huge jumps (pen lift)? Canvas 'draw' event is drag, so continuous.
                      pdf.line(start_x + p1[0]*scale, start_y + p1[1]*scale,
                               start_x + p2[0]*scale, start_y + p2[1]*scale)
                 pdf.set_draw_color(0, 0, 0) # Reset

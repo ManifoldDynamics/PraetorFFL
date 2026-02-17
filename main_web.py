@@ -127,6 +127,16 @@ def api_nfa_inventory():
     data = [{'id': r[0], 'make': r[1], 'model': r[2], 'serial': r[3], 'type': r[4], 'caliber': r[5]} for r in rows]
     return jsonify(data)
 
+@app.route('/api/nfa/acquire', methods=['POST'])
+def api_nfa_acquire():
+    data = request.json
+    # Same as regular acquisition but enforces NFA type
+    try:
+        add_acquisition(data, data.get('contact_id')) # contact_id might be null if from Form 2 (Manufacture)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
 @app.route('/api/nfa/entities', methods=['GET', 'POST'])
 def api_nfa_entities():
     from ffl_suite.logic.nfa_manager import get_nfa_entities, add_nfa_entity

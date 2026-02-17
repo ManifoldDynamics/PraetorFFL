@@ -22,23 +22,85 @@
     </div>
 
     <!-- Step 2: Questionnaire -->
+    <!-- Step 2: Buyer PII -->
     <div x-show="currentStep === 1" class="flex-1 bg-gray-800 rounded-2xl p-8 border border-gray-700 animate-fade-in overflow-y-auto">
+        <h2 class="text-2xl font-bold mb-6">Transferee Information</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <input x-model="data.transferee_address" placeholder="Address" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+            <input x-model="data.transferee_city" placeholder="City" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+            <input x-model="data.transferee_state" placeholder="State" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+            <input x-model="data.transferee_zip" placeholder="Zip" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+
+            <input x-model="data.transferee_dob" type="date" placeholder="DOB" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+            <input x-model="data.transferee_pob" placeholder="Place of Birth" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+
+            <div class="flex space-x-2">
+                <input x-model="data.transferee_height" placeholder="Height (e.g. 5'10)" class="w-1/2 bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                <input x-model="data.transferee_weight" placeholder="Weight" class="w-1/2 bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+            </div>
+
+            <select x-model="data.transferee_sex" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                <option>Male</option><option>Female</option><option>Non-Binary</option>
+            </select>
+
+            <select x-model="data.transferee_ethnicity" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                <option>Hispanic or Latino</option><option>Not Hispanic or Latino</option>
+            </select>
+
+            <select x-model="data.transferee_race" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                <option>White</option><option>Black or African American</option><option>Asian</option><option>American Indian/Alaska Native</option><option>Native Hawaiian/Pacific Islander</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Step 3: Questionnaire -->
+    <div x-show="currentStep === 2" class="flex-1 bg-gray-800 rounded-2xl p-8 border border-gray-700 animate-fade-in overflow-y-auto">
         <h2 class="text-2xl font-bold mb-6">Section B Questions</h2>
         <div class="space-y-4">
             <template x-for="q in questions" :key="q.id">
-                <div class="bg-gray-900 p-4 rounded-xl">
+                <div class="bg-gray-900 p-4 rounded-xl border" :class="isProhibited(q) ? 'border-red-500' : 'border-gray-800'">
                     <p class="text-gray-300 mb-3" x-text="q.text"></p>
-                    <div class="flex space-x-4">
+                    <div class="flex space-x-4 items-center">
                         <button @click="data[q.id] = 'Yes'" :class="data[q.id] === 'Yes' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-400'" class="px-6 py-2 rounded-lg font-bold">Yes</button>
                         <button @click="data[q.id] = 'No'" :class="data[q.id] === 'No' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-400'" class="px-6 py-2 rounded-lg font-bold">No</button>
+                        <span x-show="isProhibited(q)" class="text-red-500 text-sm font-bold ml-4">PROHIBITED</span>
                     </div>
                 </div>
             </template>
         </div>
     </div>
 
-    <!-- Step 3: Signature -->
-    <div x-show="currentStep === 2" class="flex-1 bg-gray-800 rounded-2xl p-8 border border-gray-700 animate-fade-in text-center">
+    <!-- Step 4: ID/NICS -->
+    <div x-show="currentStep === 3" class="flex-1 bg-gray-800 rounded-2xl p-8 border border-gray-700 animate-fade-in">
+        <h2 class="text-2xl font-bold mb-6">Identification & NICS</h2>
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <label class="block text-gray-400 mb-2">ID Type</label>
+                <input x-model="data.id_type" placeholder="e.g. TX Driver License" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+            </div>
+            <div>
+                <label class="block text-gray-400 mb-2">ID Number</label>
+                <input x-model="data.id_number" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+            </div>
+            <div>
+                <label class="block text-gray-400 mb-2">Expiration Date</label>
+                <input x-model="data.id_expiration_date" type="date" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+            </div>
+            <div>
+                <label class="block text-gray-400 mb-2">NICS NTN</label>
+                <input x-model="data.nics_ntn" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+            </div>
+            <div>
+                <label class="block text-gray-400 mb-2">NICS Status</label>
+                <select x-model="data.nics_status" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                    <option>Proceed</option><option>Delayed</option><option>Denied</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 5: Signature -->
+    <div x-show="currentStep === 4" class="flex-1 bg-gray-800 rounded-2xl p-8 border border-gray-700 animate-fade-in text-center">
         <h2 class="text-2xl font-bold mb-4">Certification & Signature</h2>
         <p class="text-gray-400 mb-6">I certify that my answers are true and correct.</p>
 
@@ -57,36 +119,47 @@
 <script>
     function forms4473() {
         return {
-            steps: ['Details', 'Questions', 'Sign'],
+            steps: ['Details', 'PII', 'Questions', 'ID/NICS', 'Sign'],
             currentStep: 0,
             data: { transferee_name: '', firearm_id: '' },
             questions: [
-                {id: 'q_21a', text: '21.a. Are you the actual transferee/buyer?'},
-                {id: 'q_21b', text: '21.b. Under indictment for felony?'},
-                // ... others
+                {id: 'q_21a', text: '21.a. Are you the actual transferee/buyer of the firearm(s)?', yes_ok: true},
+                {id: 'q_21b', text: '21.b. Are you under indictment/information for a felony?', yes_ok: false},
+                {id: 'q_21c', text: '21.c. Have you ever been convicted of a felony?', yes_ok: false},
+                {id: 'q_21d', text: '21.d. Are you a fugitive from justice?', yes_ok: false},
+                {id: 'q_21e', text: '21.e. Are you an unlawful user of marijuana or any depressant/stimulant/narcotic drug?', yes_ok: false},
+                {id: 'q_21f', text: '21.f. Have you ever been adjudicated as a mental defective?', yes_ok: false},
+                {id: 'q_21g', text: '21.g. Have you been discharged from the Armed Forces under dishonorable conditions?', yes_ok: false},
+                {id: 'q_21h', text: '21.h. Are you subject to a court order restraining you?', yes_ok: false},
+                {id: 'q_21i', text: '21.i. Have you ever been convicted of a misdemeanor crime of domestic violence?', yes_ok: false},
+                {id: 'q_21j', text: '21.j. Have you ever renounced your United States citizenship?', yes_ok: false},
+                {id: 'q_21k', text: '21.k. Are you an alien illegally or unlawfully in the United States?', yes_ok: false},
+                {id: 'q_21l1', text: '21.l.1. Are you an alien who has been admitted under a nonimmigrant visa?', yes_ok: true}, // Special logic actually
             ],
             init() {
                 // Init canvas
                 setTimeout(() => {
                     this.canvas = document.getElementById('sig-pad');
-                    this.ctx = this.canvas.getContext('2d');
-                    this.isDrawing = false;
-                    // Add touch/mouse listeners
-                    ['mousedown', 'touchstart'].forEach(e => this.canvas.addEventListener(e, (ev) => {
-                        this.isDrawing = true;
-                        this.ctx.beginPath();
-                        const {x, y} = this.getPos(ev);
-                        this.ctx.moveTo(x, y);
-                    }));
-                    ['mousemove', 'touchmove'].forEach(e => this.canvas.addEventListener(e, (ev) => {
-                        if(!this.isDrawing) return;
-                        ev.preventDefault();
-                        const {x, y} = this.getPos(ev);
-                        this.ctx.lineTo(x, y);
-                        this.ctx.stroke();
-                    }));
-                    ['mouseup', 'touchend'].forEach(e => this.canvas.addEventListener(e, () => this.isDrawing = false));
-                }, 100);
+                    if(this.canvas) {
+                        this.ctx = this.canvas.getContext('2d');
+                        this.isDrawing = false;
+                        // Add touch/mouse listeners
+                        ['mousedown', 'touchstart'].forEach(e => this.canvas.addEventListener(e, (ev) => {
+                            this.isDrawing = true;
+                            this.ctx.beginPath();
+                            const {x, y} = this.getPos(ev);
+                            this.ctx.moveTo(x, y);
+                        }));
+                        ['mousemove', 'touchmove'].forEach(e => this.canvas.addEventListener(e, (ev) => {
+                            if(!this.isDrawing) return;
+                            ev.preventDefault();
+                            const {x, y} = this.getPos(ev);
+                            this.ctx.lineTo(x, y);
+                            this.ctx.stroke();
+                        }));
+                        ['mouseup', 'touchend'].forEach(e => this.canvas.addEventListener(e, () => this.isDrawing = false));
+                    }
+                }, 500);
             },
             getPos(evt) {
                 const rect = this.canvas.getBoundingClientRect();
@@ -97,12 +170,18 @@
             clearSig() {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             },
+            isProhibited(q) {
+                const ans = this.data[q.id];
+                if(!ans) return false;
+                if(q.yes_ok && ans === 'No') return true;
+                if(!q.yes_ok && ans === 'Yes') return true;
+                return false;
+            },
             next() {
-                if (this.currentStep < 2) this.currentStep++;
+                if (this.currentStep < 4) this.currentStep++;
                 else {
                     // Submit
-                    // Save signature data
-                    this.data.buyer_signature_svg = this.canvas.toDataURL(); // Simple image for now, or points
+                    this.data.buyer_signature_svg = this.canvas.toDataURL();
 
                     fetch('/api/4473/submit', {
                         method: 'POST',
@@ -113,7 +192,6 @@
                     .then(res => {
                         if(res.success) {
                             alert("4473 Saved!");
-                            // window.location.reload();
                         } else {
                             alert("Error: " + res.error);
                         }
