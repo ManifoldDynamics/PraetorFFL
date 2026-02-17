@@ -85,6 +85,90 @@ def api_submit_4473():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
 
+# POS APIs
+@app.route('/api/products')
+def api_products():
+    from ffl_suite.logic.pos_manager import get_all_products
+    q = request.args.get('q')
+    prods = get_all_products(q)
+    # Convert to dict list
+    data = [{'id': p[0], 'upc': p[1], 'name': p[2], 'price': p[4], 'stock': p[6]} for p in prods]
+    return jsonify(data)
+
+@app.route('/api/checkout', methods=['POST'])
+def api_checkout():
+    data = request.json
+    try:
+        from ffl_suite.logic.pos_manager import process_sale
+        sale_id = process_sale(data)
+        return jsonify({'success': True, 'sale_id': sale_id})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+# --- Inventory Edit ---
+@app.route('/api/inventory/update', methods=['POST'])
+def api_inventory_update():
+    data = request.json
+    try:
+        from ffl_suite.database.db_manager import execute_query
+        sql = "UPDATE firearms SET make=?, model=?, serial_number=?, type=?, caliber=?, upc=? WHERE id=?"
+        execute_query(sql, (data['make'], data['model'], data['serial'], data['type'], data['caliber'], data.get('upc'), data['id']))
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+# --- NFA APIs ---
+@app.route('/api/nfa/inventory')
+def api_nfa_inventory():
+    from ffl_suite.database.db_manager import execute_query
+    # Filter for NFA types
+    sql = "SELECT id, make, model, serial_number, type, caliber FROM firearms WHERE type IN ('Silencer', 'Short-Barreled Rifle', 'Short-Barreled Shotgun', 'Machine Gun', 'Any Other Weapon') AND disposition_date IS NULL"
+    rows = execute_query(sql, fetch=True)
+    data = [{'id': r[0], 'make': r[1], 'model': r[2], 'serial': r[3], 'type': r[4], 'caliber': r[5]} for r in rows]
+    return jsonify(data)
+
+@app.route('/api/nfa/entities', methods=['GET', 'POST'])
+def api_nfa_entities():
+    from ffl_suite.logic.nfa_manager import get_nfa_entities, add_nfa_entity
+    if request.method == 'GET':
+        ents = get_nfa_entities()
+        return jsonify([{'id': e[0], 'name': e[1], 'type': e[2]} for e in ents])
+    else:
+        try:
+            add_nfa_entity(request.json)
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 400
+
+# --- Gunsmithing APIs ---
+@app.route('/api/gunsmith/jobs', methods=['GET', 'POST', 'DELETE'])
+def api_gunsmith_jobs():
+    from ffl_suite.logic.gunsmith_manager import get_active_jobs, create_job
+    from ffl_suite.database.db_manager import execute_query
+
+    if request.method == 'GET':
+        jobs = get_active_jobs()
+        # jobs: id, customer, gun, desc, status, date
+        return jsonify([{'id': j[0], 'customer': j[1], 'gun': j[2], 'description': j[3], 'status': j[4], 'date': j[5]} for j in jobs])
+
+    elif request.method == 'POST':
+        data = request.json
+        if 'id' in data: # Update
+            execute_query("UPDATE gunsmith_jobs SET status=?, description=?, notes=? WHERE id=?",
+                          (data['status'], data['description'], data.get('notes'), data['id']))
+            return jsonify({'success': True})
+        else: # Create
+            try:
+                create_job(data['customer_id'], data['firearm_id'], data['description'])
+                return jsonify({'success': True})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)}), 400
+
+    elif request.method == 'DELETE':
+        jid = request.args.get('id')
+        execute_query("DELETE FROM gunsmith_jobs WHERE id=?", (jid,))
+        return jsonify({'success': True})
+
 # Start logic
 def start_server():
     app.run(host='127.0.0.1', port=5000, threaded=True)

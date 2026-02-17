@@ -30,6 +30,43 @@
         <div class="text-6xl mb-4">📦</div>
         <p>No items found.</p>
     </div>
+
+    <!-- Edit Modal -->
+    <div x-show="editingItem" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-8 rounded-2xl w-full max-w-lg border border-gray-700">
+            <h3 class="text-xl font-bold text-white mb-6">Edit Firearm</h3>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">Make</label>
+                    <input x-model="editingItem.make" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">Model</label>
+                    <input x-model="editingItem.model" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-2 text-white">
+                </div>
+            </div>
+
+            <label class="block text-gray-400 text-sm mb-1">Serial</label>
+            <input x-model="editingItem.serial" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-2 mb-4 text-white font-mono">
+
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">Type</label>
+                    <input x-model="editingItem.type" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">Caliber</label>
+                    <input x-model="editingItem.caliber" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-2 text-white">
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-4">
+                <button @click="editingItem=null" class="text-gray-400">Cancel</button>
+                <button @click="saveItem" class="bg-blue-600 px-6 py-2 rounded-xl text-white font-bold">Save Changes</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -44,9 +81,19 @@
                     .then(data => this.items = data);
             },
             openItem(item) {
-                alert('Viewing ' + item.make + ' ' + item.model);
-                // Future: Open Modal
-            }
+                this.editingItem = { ...item };
+            },
+            saveItem() {
+                fetch('/api/inventory/update', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(this.editingItem)
+                }).then(r=>r.json()).then(res => {
+                    if(res.success) { this.editingItem=null; this.loadData(); }
+                    else { alert('Error: ' + res.error); }
+                });
+            },
+            editingItem: null
         }
     }
 </script>

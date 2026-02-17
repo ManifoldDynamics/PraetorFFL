@@ -190,3 +190,50 @@ CREATE TABLE IF NOT EXISTS profiles (
     license_number TEXT,
     premise_address TEXT
 );
+
+-- POS / Products
+CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    upc TEXT UNIQUE,
+    name TEXT,
+    description TEXT,
+    price REAL,
+    cost REAL,
+    quantity_on_hand INTEGER DEFAULT 0,
+    category TEXT -- Ammo, Accessory, Part
+);
+
+CREATE TABLE IF NOT EXISTS sales_orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER,
+    sale_date TEXT,
+    subtotal REAL,
+    tax REAL,
+    total REAL,
+    payment_method TEXT, -- Cash, Card, Check
+    status TEXT, -- Completed, Refunded
+    FOREIGN KEY (customer_id) REFERENCES contacts(id)
+);
+
+CREATE TABLE IF NOT EXISTS sale_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sale_id INTEGER,
+    product_id INTEGER, -- Link to products
+    firearm_id INTEGER, -- Link to firearms (if serialized)
+    description TEXT,
+    quantity INTEGER,
+    price_per_unit REAL,
+    FOREIGN KEY (sale_id) REFERENCES sales_orders(id),
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (firearm_id) REFERENCES firearms(id)
+);
+
+-- Gunsmithing Extensions
+CREATE TABLE IF NOT EXISTS gunsmith_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id INTEGER,
+    task_name TEXT,
+    is_completed BOOLEAN DEFAULT 0,
+    time_spent_minutes INTEGER DEFAULT 0,
+    FOREIGN KEY (job_id) REFERENCES gunsmith_jobs(id)
+);
