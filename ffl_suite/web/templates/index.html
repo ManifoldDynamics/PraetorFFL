@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFL Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+    <style>
+        /* Touch Friendly Tweaks */
+        body { -webkit-user-select: none; }
+        .tap-target { min-height: 48px; min-width: 48px; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans h-screen flex overflow-hidden" x-data="app()">
+
+    <!-- Sidebar / Drawer -->
+    <aside class="w-20 lg:w-64 bg-gray-800 border-r border-gray-700 flex flex-col justify-between">
+        <div class="p-4 flex items-center justify-center lg:justify-start">
+            <span class="text-3xl">⚡</span>
+            <span class="hidden lg:block ml-3 text-xl font-bold">FFL Suite</span>
+        </div>
+
+        <nav class="flex-1 px-2 py-4 space-y-2">
+            <template x-for="item in navItems">
+                <a href="#" @click="currentView = item.id"
+                   :class="{'bg-blue-600 text-white': currentView === item.id, 'text-gray-400 hover:bg-gray-700': currentView !== item.id}"
+                   class="flex items-center px-4 py-3 rounded-xl transition-colors duration-200 group tap-target">
+                    <span class="text-2xl" x-text="item.icon"></span>
+                    <span class="hidden lg:block ml-3 font-medium" x-text="item.label"></span>
+                </a>
+            </template>
+        </nav>
+
+        <div class="p-4">
+            <button class="w-full bg-gray-700 hover:bg-gray-600 p-3 rounded-xl flex items-center justify-center tap-target">
+                ⚙️ <span class="hidden lg:block ml-2">Settings</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col relative overflow-y-auto">
+        <!-- Header -->
+        <header class="h-16 bg-gray-800 border-b border-gray-700 flex items-center px-6 justify-between">
+            <h1 class="text-2xl font-bold" x-text="viewTitle"></h1>
+            <div class="flex items-center space-x-4">
+                <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium">Online</span>
+                <div class="h-10 w-10 bg-gray-600 rounded-full"></div>
+            </div>
+        </header>
+
+        <!-- Dashboard View -->
+        <div x-show="currentView === 'dashboard'" class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
+                <div class="text-gray-400 mb-2">Total Inventory</div>
+                <div class="text-4xl font-bold text-blue-400" x-text="stats.inventory">...</div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
+                <div class="text-gray-400 mb-2">Acquisitions</div>
+                <div class="text-4xl font-bold text-green-400" x-text="stats.acquisitions">...</div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
+                <div class="text-gray-400 mb-2">Dispositions</div>
+                <div class="text-4xl font-bold text-purple-400" x-text="stats.dispositions">...</div>
+            </div>
+
+            <!-- Quick Action (Big Touch Button) -->
+            <button class="bg-blue-600 hover:bg-blue-500 rounded-2xl p-6 flex flex-col items-center justify-center shadow-lg transform transition active:scale-95 tap-target">
+                <span class="text-4xl mb-2">➕</span>
+                <span class="font-bold text-lg">Quick Acquire</span>
+            </button>
+        </div>
+
+        <!-- Inventory View Placeholder -->
+        <div x-show="currentView === 'inventory'" class="p-6">
+            <div class="bg-gray-800 rounded-2xl p-4">
+                <input type="text" placeholder="Search Inventory..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-blue-500">
+            </div>
+            <!-- Grid of Cards -->
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Example Card -->
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 active:bg-gray-700 transition cursor-pointer">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-xl font-bold">Glock 19</div>
+                            <div class="text-gray-400">9mm • Pistol</div>
+                        </div>
+                        <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs">Available</span>
+                    </div>
+                    <div class="mt-4 font-mono text-sm text-gray-500">SN: 12345ABC</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function app() {
+            return {
+                currentView: 'dashboard',
+                stats: { inventory: '-', acquisitions: '-', dispositions: '-' },
+                navItems: [
+                    { id: 'dashboard', icon: '🏠', label: 'Dashboard' },
+                    { id: 'inventory', icon: '📦', label: 'Inventory' },
+                    { id: 'acquire', icon: '➕', label: 'Acquire' },
+                    { id: 'dispose', icon: '➖', label: 'Dispose' },
+                    { id: '4473', icon: '📝', label: 'Forms 4473' },
+                    { id: 'nfa', icon: '🔐', label: 'NFA Vault' },
+                ],
+                get viewTitle() {
+                    return this.navItems.find(i => i.id === this.currentView)?.label || 'App';
+                },
+                init() {
+                    fetch('/api/dashboard/stats')
+                        .then(r => r.json())
+                        .then(data => this.stats = data);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

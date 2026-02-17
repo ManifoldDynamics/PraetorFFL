@@ -88,3 +88,18 @@ def get_bound_book():
         ORDER BY f.acquisition_date DESC
     """
     return execute_query(sql, fetch=True)
+
+def get_inventory_count():
+    sql = "SELECT COUNT(*) FROM firearms WHERE disposition_date IS NULL"
+    res = execute_query(sql, fetch=True)
+    return res[0][0] if res else 0
+
+def get_total_acquisitions_count():
+    sql = "SELECT COUNT(*) FROM firearms"
+    res = execute_query(sql, fetch=True)
+    return res[0][0] if res else 0
+
+def get_total_dispositions_count():
+    sql = "SELECT COUNT(*) FROM firearms WHERE disposition_date IS NOT NULL"
+    res = execute_query(sql, fetch=True)
+    return res[0][0] if res else 0

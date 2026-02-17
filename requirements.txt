@@ -1,5 +1,6 @@
-customtkinter
-packaging
+flask
+pywebview
 fpdf2
 pyinstaller
+customtkinter
 tkinter-tooltip
