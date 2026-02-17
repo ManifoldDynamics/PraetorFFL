@@ -2,7 +2,8 @@ import sqlite3
 import os
 import sys
 
-DB_FILE = 'ffl_data.db'
+# Store DB in data directory for persistence
+DB_FILE = os.path.join(os.environ.get('DATA_DIR', '.'), 'ffl_data.db')
 
 def get_connection():
     """Returns a connection to the SQLite database."""

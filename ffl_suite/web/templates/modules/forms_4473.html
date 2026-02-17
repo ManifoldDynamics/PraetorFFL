@@ -1,0 +1,125 @@
+<div x-data="forms4473()" class="p-6 h-full flex flex-col">
+    <!-- Progress Bar -->
+    <div class="flex justify-between mb-8 px-10">
+        <template x-for="(step, idx) in steps" :key="idx">
+            <div class="flex flex-col items-center">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors duration-300"
+                     :class="idx <= currentStep ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-500'"
+                     x-text="idx + 1"></div>
+                <div class="text-xs mt-2 text-gray-400" x-text="step"></div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Step 1: Firearm & Buyer -->
+    <div x-show="currentStep === 0" class="flex-1 bg-gray-800 rounded-2xl p-8 border border-gray-700 animate-fade-in">
+        <h2 class="text-2xl font-bold mb-6">Transaction Details</h2>
+        <!-- Simple Inputs for MVP -->
+        <label class="block text-gray-400 mb-2">Buyer Name</label>
+        <input x-model="data.transferee_name" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 mb-4 text-white">
+        <label class="block text-gray-400 mb-2">Firearm ID</label>
+        <input x-model="data.firearm_id" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+    </div>
+
+    <!-- Step 2: Questionnaire -->
+    <div x-show="currentStep === 1" class="flex-1 bg-gray-800 rounded-2xl p-8 border border-gray-700 animate-fade-in overflow-y-auto">
+        <h2 class="text-2xl font-bold mb-6">Section B Questions</h2>
+        <div class="space-y-4">
+            <template x-for="q in questions" :key="q.id">
+                <div class="bg-gray-900 p-4 rounded-xl">
+                    <p class="text-gray-300 mb-3" x-text="q.text"></p>
+                    <div class="flex space-x-4">
+                        <button @click="data[q.id] = 'Yes'" :class="data[q.id] === 'Yes' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-400'" class="px-6 py-2 rounded-lg font-bold">Yes</button>
+                        <button @click="data[q.id] = 'No'" :class="data[q.id] === 'No' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-400'" class="px-6 py-2 rounded-lg font-bold">No</button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Step 3: Signature -->
+    <div x-show="currentStep === 2" class="flex-1 bg-gray-800 rounded-2xl p-8 border border-gray-700 animate-fade-in text-center">
+        <h2 class="text-2xl font-bold mb-4">Certification & Signature</h2>
+        <p class="text-gray-400 mb-6">I certify that my answers are true and correct.</p>
+
+        <canvas id="sig-pad" class="bg-white rounded-xl mx-auto mb-4 touch-none" width="600" height="200"></canvas>
+        <button @click="clearSig" class="text-gray-400 underline">Clear Signature</button>
+    </div>
+
+    <!-- Nav -->
+    <div class="mt-6 flex justify-between">
+        <button @click="currentStep--" x-show="currentStep > 0" class="px-8 py-3 bg-gray-700 rounded-xl font-bold text-white">Back</button>
+        <div class="flex-1"></div>
+        <button @click="next" class="px-8 py-3 bg-green-600 rounded-xl font-bold text-white" x-text="currentStep === 2 ? 'Complete' : 'Next'"></button>
+    </div>
+</div>
+
+<script>
+    function forms4473() {
+        return {
+            steps: ['Details', 'Questions', 'Sign'],
+            currentStep: 0,
+            data: { transferee_name: '', firearm_id: '' },
+            questions: [
+                {id: 'q_21a', text: '21.a. Are you the actual transferee/buyer?'},
+                {id: 'q_21b', text: '21.b. Under indictment for felony?'},
+                // ... others
+            ],
+            init() {
+                // Init canvas
+                setTimeout(() => {
+                    this.canvas = document.getElementById('sig-pad');
+                    this.ctx = this.canvas.getContext('2d');
+                    this.isDrawing = false;
+                    // Add touch/mouse listeners
+                    ['mousedown', 'touchstart'].forEach(e => this.canvas.addEventListener(e, (ev) => {
+                        this.isDrawing = true;
+                        this.ctx.beginPath();
+                        const {x, y} = this.getPos(ev);
+                        this.ctx.moveTo(x, y);
+                    }));
+                    ['mousemove', 'touchmove'].forEach(e => this.canvas.addEventListener(e, (ev) => {
+                        if(!this.isDrawing) return;
+                        ev.preventDefault();
+                        const {x, y} = this.getPos(ev);
+                        this.ctx.lineTo(x, y);
+                        this.ctx.stroke();
+                    }));
+                    ['mouseup', 'touchend'].forEach(e => this.canvas.addEventListener(e, () => this.isDrawing = false));
+                }, 100);
+            },
+            getPos(evt) {
+                const rect = this.canvas.getBoundingClientRect();
+                const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+                const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+                return { x: clientX - rect.left, y: clientY - rect.top };
+            },
+            clearSig() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            },
+            next() {
+                if (this.currentStep < 2) this.currentStep++;
+                else {
+                    // Submit
+                    // Save signature data
+                    this.data.buyer_signature_svg = this.canvas.toDataURL(); // Simple image for now, or points
+
+                    fetch('/api/4473/submit', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(this.data)
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        if(res.success) {
+                            alert("4473 Saved!");
+                            // window.location.reload();
+                        } else {
+                            alert("Error: " + res.error);
+                        }
+                    });
+                }
+            }
+        }
+    }
+</script>

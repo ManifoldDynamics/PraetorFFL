@@ -1,0 +1,98 @@
+<div x-data="acquisition()" class="p-6 max-w-4xl mx-auto">
+    <div class="bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-700">
+        <h2 class="text-2xl font-bold mb-6 text-white flex items-center">
+            <span class="mr-3">➕</span> Acquire Firearm
+        </h2>
+
+        <form @submit.prevent="submit" class="space-y-6">
+            <!-- Source -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-gray-400 mb-2">Source Contact</label>
+                    <select x-model="form.contact_id" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-blue-500">
+                        <option value="">Select Contact...</option>
+                        <template x-for="c in contacts" :key="c.id">
+                            <option :value="c.id" x-text="c.name"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-2">Acquisition Date</label>
+                    <input x-model="form.acquisition_date" type="date" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                </div>
+            </div>
+
+            <!-- ID -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-gray-400 mb-2">UPC / EAN</label>
+                    <input x-model="form.upc" type="text" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-2">Serial Number</label>
+                    <input x-model="form.serial_number" type="text" required class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white font-mono">
+                </div>
+            </div>
+
+            <!-- Details -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-gray-400 mb-2">Make</label>
+                    <input x-model="form.make" type="text" required class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-2">Model</label>
+                    <input x-model="form.model" type="text" required class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-gray-400 mb-2">Type</label>
+                    <select x-model="form.type" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                        <option>Pistol</option><option>Rifle</option><option>Shotgun</option><option>Receiver</option><option>Silencer</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-2">Caliber</label>
+                    <input x-model="form.caliber" type="text" required class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-2">Importer</label>
+                    <input x-model="form.importer" type="text" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl shadow-lg mt-8 text-lg">
+                Confirm Acquisition
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function acquisition() {
+        return {
+            form: {
+                contact_id: '', acquisition_date: new Date().toISOString().split('T')[0],
+                upc: '', serial_number: '', make: '', model: '', type: 'Pistol', caliber: '', importer: '', condition: 'New'
+            },
+            contacts: [],
+            init() {
+                fetch('/api/contacts').then(r => r.json()).then(data => this.contacts = data);
+            },
+            submit() {
+                fetch('/api/acquire', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(this.form)
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if(res.success) { alert('Saved!'); this.form.serial_number = ''; }
+                    else { alert('Error: ' + res.error); }
+                });
+            }
+        }
+    }
+</script>

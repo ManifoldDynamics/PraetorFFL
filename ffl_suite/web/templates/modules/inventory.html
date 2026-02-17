@@ -1,0 +1,52 @@
+<div x-data="inventory()" class="p-6">
+    <div class="flex justify-between items-center mb-6">
+        <div class="bg-gray-800 rounded-2xl p-2 flex-1 mr-4">
+            <input x-model="search" @keyup.enter="loadData" type="text" placeholder="Search Inventory..." class="w-full bg-gray-900 border-none rounded-xl px-4 py-3 text-lg text-white focus:ring-2 focus:ring-blue-500">
+        </div>
+        <button @click="loadData" class="bg-blue-600 p-4 rounded-xl text-white font-bold tap-target">Refresh</button>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <template x-for="item in items" :key="item.id">
+            <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg active:scale-95 transition cursor-pointer" @click="openItem(item)">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h3 class="text-xl font-bold text-white" x-text="item.make"></h3>
+                        <p class="text-blue-400 font-medium" x-text="item.model"></p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-gray-700 text-gray-300" x-text="item.type"></span>
+                </div>
+                <div class="space-y-1 text-gray-400 text-sm">
+                    <p>SN: <span class="font-mono text-white" x-text="item.serial"></span></p>
+                    <p>Caliber: <span class="text-white" x-text="item.caliber"></span></p>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Empty State -->
+    <div x-show="items.length === 0" class="text-center py-20 text-gray-500">
+        <div class="text-6xl mb-4">📦</div>
+        <p>No items found.</p>
+    </div>
+</div>
+
+<script>
+    function inventory() {
+        return {
+            items: [],
+            search: '',
+            init() { this.loadData(); },
+            loadData() {
+                fetch('/api/inventory?q=' + this.search)
+                    .then(r => r.json())
+                    .then(data => this.items = data);
+            },
+            openItem(item) {
+                alert('Viewing ' + item.make + ' ' + item.model);
+                // Future: Open Modal
+            }
+        }
+    }
+</script>

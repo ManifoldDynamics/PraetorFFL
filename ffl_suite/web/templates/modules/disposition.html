@@ -1,0 +1,83 @@
+<div x-data="disposition()" class="p-6 max-w-4xl mx-auto">
+    <!-- Step 1: Search -->
+    <div x-show="!selectedItem" class="bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-700">
+        <h2 class="text-2xl font-bold mb-6 text-white">Find Firearm to Dispose</h2>
+        <input x-model="search" @keyup.enter="performSearch" type="text" placeholder="Scan Serial or Search..." class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-4 text-xl text-white mb-4">
+
+        <div class="space-y-2">
+            <template x-for="item in results" :key="item.id">
+                <div @click="select(item)" class="bg-gray-700 p-4 rounded-xl flex justify-between items-center cursor-pointer hover:bg-blue-600 transition">
+                    <div>
+                        <div class="font-bold text-lg" x-text="item.make + ' ' + item.model"></div>
+                        <div class="font-mono text-gray-400" x-text="item.serial"></div>
+                    </div>
+                    <span class="text-2xl">👉</span>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Step 2: Details -->
+    <div x-show="selectedItem" class="bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-700">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-white">Disposition Details</h2>
+            <button @click="selectedItem = null" class="text-gray-400">Cancel</button>
+        </div>
+
+        <div class="bg-gray-900 p-4 rounded-xl mb-6 border border-gray-700">
+            <div class="text-gray-400 text-sm">Disposing:</div>
+            <div class="text-xl font-bold text-white" x-text="selectedItem?.make + ' ' + selectedItem?.model"></div>
+            <div class="font-mono text-blue-400" x-text="selectedItem?.serial"></div>
+        </div>
+
+        <form @submit.prevent="submit" class="space-y-6">
+            <div>
+                <label class="block text-gray-400 mb-2">Disposed To (Contact)</label>
+                <select x-model="form.contact_id" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                    <option value="">Select Buyer...</option>
+                    <template x-for="c in contacts" :key="c.id">
+                        <option :value="c.id" x-text="c.name"></option>
+                    </template>
+                </select>
+            </div>
+            <div>
+                <label class="block text-gray-400 mb-2">Date</label>
+                <input x-model="form.date" type="date" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button type="submit" class="bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded-xl">Quick Dispose</button>
+                <button type="button" @click="start4473" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl">Launch 4473 Wizard</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function disposition() {
+        return {
+            search: '', results: [], selectedItem: null, contacts: [],
+            form: { contact_id: '', date: new Date().toISOString().split('T')[0] },
+            init() { fetch('/api/contacts').then(r=>r.json()).then(d=>this.contacts=d); },
+            performSearch() {
+                fetch('/api/inventory?q=' + this.search).then(r=>r.json()).then(d=>this.results=d);
+            },
+            select(item) { this.selectedItem = item; },
+            submit() {
+                fetch('/api/dispose', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ ...this.form, firearm_id: this.selectedItem.id })
+                }).then(r=>r.json()).then(res => {
+                    if(res.success) { alert('Disposed!'); this.selectedItem = null; this.search = ''; this.results=[]; }
+                });
+            },
+            start4473() {
+                // Navigate to 4473 with params
+                window.location.hash = '#4473?fid=' + this.selectedItem.id;
+                // Since using simple linking, we might need a better router or query param handling
+                alert("Redirecting to 4473...");
+            }
+        }
+    }
+</script>

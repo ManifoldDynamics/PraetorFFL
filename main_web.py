@@ -14,12 +14,19 @@ if os.environ.get('DOCKER_MODE'):
     pass # DB manager usually defaults to relative, which is fine in /app
 
 # API Routes to access existing logic
-from ffl_suite.database.db_manager import init_db
-from ffl_suite.logic.inventory_manager import get_inventory_count, get_total_acquisitions_count, get_total_dispositions_count
+from ffl_suite.database.db_manager import init_db, execute_query
+from ffl_suite.logic.inventory_manager import (
+    get_inventory_count, get_total_acquisitions_count, get_total_dispositions_count,
+    search_inventory, add_acquisition, record_disposition
+)
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/modules/<path:name>')
+def get_module(name):
+    return render_template(f'modules/{name}.html')
 
 @app.route('/api/dashboard/stats')
 def get_stats():
@@ -28,6 +35,55 @@ def get_stats():
         'acquisitions': get_total_acquisitions_count(),
         'dispositions': get_total_dispositions_count()
     })
+
+@app.route('/api/inventory')
+def api_inventory():
+    query = request.args.get('q', '')
+    results = search_inventory(query)
+    # Convert tuples to dicts: id, make, model, serial, type, caliber
+    data = []
+    if results:
+        for r in results:
+            data.append({
+                'id': r[0], 'make': r[1], 'model': r[2], 'serial': r[3],
+                'type': r[4], 'caliber': r[5]
+            })
+    return jsonify(data)
+
+@app.route('/api/contacts')
+def api_contacts():
+    # Simple direct query for contacts
+    contacts = execute_query("SELECT id, name FROM contacts", fetch=True)
+    return jsonify([{'id': c[0], 'name': c[1]} for c in contacts])
+
+@app.route('/api/acquire', methods=['POST'])
+def api_acquire():
+    data = request.json
+    # data: contact_id, make, model...
+    try:
+        add_acquisition(data, data['contact_id'])
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/dispose', methods=['POST'])
+def api_dispose():
+    data = request.json
+    try:
+        record_disposition(data['firearm_id'], data['contact_id'], data['date'])
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/4473/submit', methods=['POST'])
+def api_submit_4473():
+    data = request.json
+    try:
+        from ffl_suite.logic.transaction_manager import save_draft_4473
+        save_draft_4473(data)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
 
 # Start logic
 def start_server():

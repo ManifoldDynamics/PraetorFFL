@@ -23,6 +23,10 @@ COPY . .
 # Set environment variable to tell app we are in Docker
 ENV DOCKER_MODE=true
 ENV PYTHONUNBUFFERED=1
+ENV DATA_DIR=/app/data
+
+# Create data directory
+RUN mkdir -p /app/data
 
 # Expose port
 EXPOSE 5000
