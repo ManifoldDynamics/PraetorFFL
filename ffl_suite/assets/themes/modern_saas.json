@@ -2,6 +2,23 @@
   "CTk": {
     "fg_color": ["#f3f4f6", "#0f172a"]
   },
+  "CTkFont": {
+    "macOS": {
+      "family": "SF Display",
+      "size": 13,
+      "weight": "normal"
+    },
+    "Windows": {
+      "family": "Segoe UI",
+      "size": 13,
+      "weight": "normal"
+    },
+    "Linux": {
+      "family": "Roboto",
+      "size": 13,
+      "weight": "normal"
+    }
+  },
   "CTkFrame": {
     "corner_radius": 15,
     "border_width": 0,
