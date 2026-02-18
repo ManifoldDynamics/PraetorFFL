@@ -105,6 +105,34 @@ def api_checkout():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
 
+# --- Settings APIs ---
+@app.route('/api/settings', methods=['GET', 'POST'])
+def api_settings():
+    from ffl_suite.logic.settings_manager import get_setting, set_setting
+
+    keys = ['ffl_name', 'ffl_license_number', 'ffl_premise_address', 'tax_rate', 'printer_ip', 'printer_type', 'receipt_footer', 'logo_path']
+
+    if request.method == 'GET':
+        data = {k: get_setting(k) for k in keys}
+        return jsonify(data)
+    else: # POST
+        data = request.json
+        for k, v in data.items():
+            set_setting(k, v)
+        return jsonify({'success': True})
+
+@app.route('/api/sales/receipt/<int:sale_id>')
+def api_get_receipt(sale_id):
+    # Serve the PDF
+    from flask import send_file
+    from ffl_suite.database.db_manager import execute_query
+    res = execute_query("SELECT receipt_path FROM sales_orders WHERE id = ?", (sale_id,), fetch=True)
+    if res and res[0][0]:
+        path = res[0][0]
+        if os.path.exists(path):
+            return send_file(path)
+    return "Receipt not found", 404
+
 # --- Inventory Edit ---
 @app.route('/api/inventory/update', methods=['POST'])
 def api_inventory_update():

@@ -64,4 +64,26 @@ def process_sale(sale_data):
             # Disposition date is today
             record_disposition(fid, sale_data.get('customer_id'), datetime.now().strftime("%Y-%m-%d"))
 
+    # 4. Generate Receipt PDF
+    try:
+        from ffl_suite.reports.receipt_generator import generate_receipt_pdf
+        import os
+        # Ensure directory
+        rec_dir = "receipts"
+        if not os.path.exists(rec_dir): os.makedirs(rec_dir)
+        path = f"{rec_dir}/receipt_{sale_id}.pdf"
+
+        # Gather full data
+        full_sale_data = {
+            'id': sale_id, 'date': datetime.now().strftime("%Y-%m-%d %H:%M"),
+            'subtotal': subtotal, 'tax': tax, 'total': total,
+            'items': sale_data['items']
+        }
+        generate_receipt_pdf(path, full_sale_data)
+
+        # Update DB
+        execute_query("UPDATE sales_orders SET receipt_path = ? WHERE id = ?", (path, sale_id))
+    except Exception as e:
+        print(f"Receipt Gen Error: {e}")
+
     return sale_id
