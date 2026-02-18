@@ -32,10 +32,16 @@ def get_module(name):
 
 @app.route('/api/dashboard/stats')
 def get_stats():
+    from ffl_suite.logic.analytics_manager import get_sales_analytics, get_inventory_analytics, get_recent_activity
     return jsonify({
         'inventory': get_inventory_count(),
         'acquisitions': get_total_acquisitions_count(),
-        'dispositions': get_total_dispositions_count()
+        'dispositions': get_total_dispositions_count(),
+        'charts': {
+            'sales': get_sales_analytics(),
+            'inventory': get_inventory_analytics()
+        },
+        'activity': get_recent_activity()
     })
 
 @app.route('/api/inventory')

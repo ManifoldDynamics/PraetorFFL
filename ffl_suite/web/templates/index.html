@@ -6,6 +6,7 @@
     <title>FFL Suite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Touch Friendly Tweaks */
         body { -webkit-user-select: none; }
@@ -51,25 +52,63 @@
         </header>
 
         <!-- Dashboard View -->
-        <div x-show="currentView === 'dashboard'" class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
-            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
-                <div class="text-gray-400 mb-2">Total Inventory</div>
-                <div class="text-4xl font-bold text-blue-400" x-text="stats.inventory">...</div>
-            </div>
-            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
-                <div class="text-gray-400 mb-2">Acquisitions</div>
-                <div class="text-4xl font-bold text-green-400" x-text="stats.acquisitions">...</div>
-            </div>
-            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
-                <div class="text-gray-400 mb-2">Dispositions</div>
-                <div class="text-4xl font-bold text-purple-400" x-text="stats.dispositions">...</div>
+        <div x-show="currentView === 'dashboard'" class="p-6 animate-fade-in flex flex-col h-full overflow-y-auto">
+            <!-- Top Row: Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
+                    <div class="text-gray-400 mb-2">Total Inventory</div>
+                    <div class="text-4xl font-bold text-blue-400" x-text="stats.inventory">...</div>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
+                    <div class="text-gray-400 mb-2">Acquisitions</div>
+                    <div class="text-4xl font-bold text-green-400" x-text="stats.acquisitions">...</div>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
+                    <div class="text-gray-400 mb-2">Dispositions</div>
+                    <div class="text-4xl font-bold text-purple-400" x-text="stats.dispositions">...</div>
+                </div>
+
+                <!-- Quick Action -->
+                <button @click="currentView = 'acquire'" class="bg-blue-600 hover:bg-blue-500 rounded-2xl p-6 flex flex-col items-center justify-center shadow-lg transform transition active:scale-95 tap-target">
+                    <span class="text-4xl mb-2">➕</span>
+                    <span class="font-bold text-lg">Quick Acquire</span>
+                </button>
             </div>
 
-            <!-- Quick Action -->
-            <button @click="currentView = 'acquire'" class="bg-blue-600 hover:bg-blue-500 rounded-2xl p-6 flex flex-col items-center justify-center shadow-lg transform transition active:scale-95 tap-target">
-                <span class="text-4xl mb-2">➕</span>
-                <span class="font-bold text-lg">Quick Acquire</span>
-            </button>
+            <!-- Middle Row: Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 h-80">
+                    <h3 class="text-lg font-bold text-white mb-4">Sales Trend (Last 7 Days)</h3>
+                    <div class="relative h-60 w-full">
+                        <canvas id="chartSales"></canvas>
+                    </div>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 h-80">
+                    <h3 class="text-lg font-bold text-white mb-4">Inventory Mix</h3>
+                    <div class="relative h-60 w-full">
+                        <canvas id="chartInventory"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Row: Activity Feed -->
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
+                <h3 class="text-lg font-bold text-white mb-4">Recent Activity</h3>
+                <div class="space-y-4">
+                    <template x-for="act in stats.activity" :key="act.date + act.description">
+                        <div class="flex items-center justify-between border-b border-gray-700 pb-2">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3" x-text="act.type === 'Acquisition' ? '📥' : '📤'"></span>
+                                <div>
+                                    <div class="text-white font-medium" x-text="act.description"></div>
+                                    <div class="text-gray-500 text-sm" x-text="act.type"></div>
+                                </div>
+                            </div>
+                            <div class="text-gray-400 text-sm" x-text="act.date"></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
         </div>
 
         <!-- Dynamic Module Container -->
@@ -102,7 +141,10 @@
                 init() {
                     fetch('/api/dashboard/stats')
                         .then(r => r.json())
-                        .then(data => this.stats = data);
+                        .then(data => {
+                            this.stats = data;
+                            this.initCharts(data.charts);
+                        });
 
                     this.$watch('currentView', (value) => {
                         if(value === 'dashboard') return;
@@ -135,6 +177,48 @@
                         // cleanup
                         document.body.removeChild(newScript);
                     }
+                },
+                initCharts(data) {
+                    if(!document.getElementById('chartSales')) return;
+
+                    new Chart(document.getElementById('chartSales'), {
+                        type: 'bar',
+                        data: {
+                            labels: data.sales.labels,
+                            datasets: [{
+                                label: 'Sales ($)',
+                                data: data.sales.data,
+                                backgroundColor: '#3b82f6',
+                                borderRadius: 5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { grid: { color: '#374151' }, ticks: { color: '#9ca3af' } },
+                                x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('chartInventory'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.inventory.labels,
+                            datasets: [{
+                                data: data.inventory.data,
+                                backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'right', labels: { color: '#d1d5db' } } }
+                        }
+                    });
                 }
             }
         }
