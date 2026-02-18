@@ -180,6 +180,43 @@ def api_get_receipt(sale_id):
             return send_file(path)
     return "Receipt not found", 404
 
+@app.route('/api/settings/receipt-preview', methods=['POST'])
+def api_receipt_preview():
+    data = request.json
+    # data contains draft settings
+    # Generate a dummy receipt using these settings
+    try:
+        from ffl_suite.reports.receipt_generator import generate_receipt_pdf
+        import tempfile
+
+        # Mock sale data
+        mock_sale = {
+            'id': 9999, 'date': '2023-12-31 23:59',
+            'subtotal': 100.00, 'tax': 8.25, 'total': 108.25,
+            'items': [
+                {'name': 'Glock 19 Gen 5', 'quantity': 1, 'price': 550.00},
+                {'name': '9mm Ammo Box', 'quantity': 2, 'price': 25.00}
+            ]
+        }
+
+        # We need to temporarily override settings logic to use 'data' instead of DB
+        # But generator calls get_setting(). We can modify generator to accept overrides.
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            tmp_path = tmp.name
+
+        generate_receipt_pdf(tmp_path, mock_sale, settings_override=data)
+
+        return jsonify({'success': True, 'url': f'/api/temp/download/{os.path.basename(tmp_path)}'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/temp/download/<filename>')
+def api_temp_download(filename):
+    import tempfile
+    from flask import send_from_directory
+    return send_from_directory(tempfile.gettempdir(), filename)
+
 # --- Inventory Edit ---
 @app.route('/api/inventory/update', methods=['POST'])
 def api_inventory_update():

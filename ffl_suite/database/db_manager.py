@@ -22,7 +22,15 @@ def get_resource_path(relative_path):
 
 def init_db():
     """Initializes the database by running the schema script."""
-    schema_path = get_resource_path('schema.sql')
+    # PyInstaller resource path correction
+    if getattr(sys, 'frozen', False):
+        # When frozen, schema.sql is often at root of _MEIPASS or inside ffl_suite/database
+        # We try explicit location first
+        schema_path = get_resource_path('ffl_suite/database/schema.sql')
+        if not os.path.exists(schema_path):
+             schema_path = get_resource_path('schema.sql') # Fallback
+    else:
+        schema_path = os.path.join(os.path.dirname(__file__), 'schema.sql')
 
     conn = get_connection()
     cursor = conn.cursor()
