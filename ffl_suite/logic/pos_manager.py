@@ -69,9 +69,9 @@ def process_sale(sale_data):
         from ffl_suite.reports.receipt_generator import generate_receipt_pdf
         import os
         # Ensure directory
-        rec_dir = "receipts"
+        rec_dir = os.path.join(os.environ.get('DATA_DIR', '.'), "receipts")
         if not os.path.exists(rec_dir): os.makedirs(rec_dir)
-        path = f"{rec_dir}/receipt_{sale_id}.pdf"
+        path = os.path.join(rec_dir, f"receipt_{sale_id}.pdf")
 
         # Gather full data
         full_sale_data = {

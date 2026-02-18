@@ -29,6 +29,45 @@
         </div>
     </div>
 
+    <!-- Forms Tab -->
+    <div x-show="tab==='forms'" class="flex-1 overflow-y-auto">
+        <div class="bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-3xl mx-auto">
+            <h3 class="text-xl font-bold text-white mb-6">Generate Form 4 Helper</h3>
+
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-gray-400 mb-2">Transferee (Entity/Trust)</label>
+                    <select x-model="form4.transferee_entity_id" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                        <option value="">Select Entity...</option>
+                        <template x-for="e in entities" :key="e.id"><option :value="e.id" x-text="e.name"></option></template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-2">Firearm (Inventory)</label>
+                    <select x-model="form4.firearm_id" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                        <option value="">Select NFA Item...</option>
+                        <template x-for="i in inventory" :key="i.id"><option :value="i.id" x-text="i.make + ' ' + i.model + ' (' + i.serial + ')'"></option></template>
+                    </select>
+                </div>
+            </div>
+
+            <h4 class="text-lg font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">CLEO Information</h4>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <input x-model="form4.cleo_name" placeholder="Name" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-2 text-white">
+                <input x-model="form4.cleo_title" placeholder="Title (Sheriff)" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-2 text-white">
+                <input x-model="form4.cleo_agency" placeholder="Agency" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-2 text-white">
+                <input x-model="form4.cleo_address_street" placeholder="Address" class="bg-gray-900 border border-gray-600 rounded-xl px-4 py-2 text-white">
+                <div class="flex space-x-2 col-span-2">
+                    <input x-model="form4.cleo_address_city" placeholder="City" class="flex-1 bg-gray-900 border border-gray-600 rounded-xl px-4 py-2 text-white">
+                    <input x-model="form4.cleo_address_state" placeholder="State" class="w-24 bg-gray-900 border border-gray-600 rounded-xl px-4 py-2 text-white">
+                    <input x-model="form4.cleo_address_zip" placeholder="Zip" class="w-32 bg-gray-900 border border-gray-600 rounded-xl px-4 py-2 text-white">
+                </div>
+            </div>
+
+            <button @click="generateForm" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl">Generate Helper PDF</button>
+        </div>
+    </div>
+
     <!-- Entities Tab -->
     <div x-show="tab==='entities'" class="flex-1 overflow-y-auto">
         <div class="flex justify-end mb-4">
@@ -134,6 +173,7 @@
             newEntity: { name: '', entity_type: 'Trust', address_street: '', address_city: '', address_state: '', address_zip: '' },
             nfaAcq: { contact_id: '', acquisition_date: new Date().toISOString().split('T')[0], type: 'Silencer', make: '', model: '', serial_number: '', caliber: '', condition: 'New' },
             contacts: [],
+            form4: { form_type: 'Form 4', transferee_entity_id: '', firearm_id: '', cleo_name: '', cleo_title: '', cleo_agency: '', cleo_address_street: '', cleo_address_city: '', cleo_address_state: '', cleo_address_zip: '' },
 
             init() {
                 this.loadInv();
@@ -163,6 +203,18 @@
                         alert('Item Acquired into NFA Inventory');
                         this.showAcquireModal=false;
                         this.loadInv();
+                    } else { alert('Error: ' + res.error); }
+                });
+            },
+
+            generateForm() {
+                fetch('/api/nfa/forms', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(this.form4)
+                }).then(r=>r.json()).then(res => {
+                    if(res.success && res.pdf_url) {
+                        window.open(res.pdf_url, '_blank');
                     } else { alert('Error: ' + res.error); }
                 });
             }

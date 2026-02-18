@@ -191,7 +191,8 @@
                     .then(r => r.json())
                     .then(res => {
                         if(res.success) {
-                            alert("4473 Saved!");
+                            if(res.pdf_url) window.open(res.pdf_url, '_blank');
+                            alert("4473 Saved & PDF Generated!");
                         } else {
                             alert("Error: " + res.error);
                         }

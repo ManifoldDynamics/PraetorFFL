@@ -8,13 +8,15 @@ template_dir = os.path.join(os.path.dirname(__file__), 'ffl_suite/web/templates'
 static_dir = os.path.join(os.path.dirname(__file__), 'ffl_suite/web/static')
 app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 
-# Ensure DB path is absolute if in docker
-if os.environ.get('DOCKER_MODE'):
-    # In docker, we might mount /app/data
-    pass # DB manager usually defaults to relative, which is fine in /app
+# Initialize DB on startup (for Gunicorn/Docker)
+from ffl_suite.database.db_manager import init_db, execute_query, get_resource_path
+with app.app_context():
+    try:
+        init_db()
+    except Exception as e:
+        print(f"DB Init Warning: {e}")
 
 # API Routes to access existing logic
-from ffl_suite.database.db_manager import init_db, execute_query
 from ffl_suite.logic.inventory_manager import (
     get_inventory_count, get_total_acquisitions_count, get_total_dispositions_count,
     search_inventory, add_acquisition, record_disposition
@@ -39,14 +41,19 @@ def get_stats():
 @app.route('/api/inventory')
 def api_inventory():
     query = request.args.get('q', '')
+    # Need to fetch price/cost too. search_inventory returns SELECT *
+    # Schema: id, make, model, serial, type, caliber, importer, condition, upc, price, cost, acq_date...
+    # Let's check logic/inventory_manager.py search_inventory
     results = search_inventory(query)
-    # Convert tuples to dicts: id, make, model, serial, type, caliber
     data = []
     if results:
         for r in results:
+            # Safer to map by index if we know schema order, or dict factory.
+            # Schema order in create: id, make, model, serial, type, caliber, importer, condition, upc, price, cost...
+            # 0:id, 1:make, 2:model, 3:serial, 4:type, 5:caliber, 6:importer, 7:cond, 8:upc, 9:price, 10:cost
             data.append({
                 'id': r[0], 'make': r[1], 'model': r[2], 'serial': r[3],
-                'type': r[4], 'caliber': r[5]
+                'type': r[4], 'caliber': r[5], 'upc': r[8], 'price': r[9], 'cost': r[10]
             })
     return jsonify(data)
 
@@ -80,10 +87,42 @@ def api_submit_4473():
     data = request.json
     try:
         from ffl_suite.logic.transaction_manager import save_draft_4473
-        save_draft_4473(data)
-        return jsonify({'success': True})
+        from ffl_suite.reports.pdf_generator import generate_4473_pdf
+        from ffl_suite.logic.settings_manager import get_ffl_info
+
+        # Save to DB
+        tid = save_draft_4473(data)
+
+        # Generate PDF - Use persistent data dir if in Docker
+        pdf_dir = os.path.join(os.environ.get('DATA_DIR', '.'), "forms_4473")
+        if not os.path.exists(pdf_dir): os.makedirs(pdf_dir)
+        filename = f"4473_{tid}_{data.get('transferee_name')}.pdf".replace(' ', '_')
+        filepath = os.path.join(pdf_dir, filename)
+
+        # We need structured data for the generator
+        # firearm info might be ID only in 'data', need to fetch details?
+        # The wizard sends firearm_id. Let's fetch firearm details.
+        from ffl_suite.database.db_manager import execute_query
+        firearm_res = execute_query("SELECT make, model, serial_number, type, caliber FROM firearms WHERE id=?", (data.get('firearm_id'),), fetch=True)
+        firearm_data = {}
+        if firearm_res:
+            fr = firearm_res[0]
+            firearm_data = {'make': fr[0], 'model': fr[1], 'serial': fr[2], 'type': fr[3], 'caliber': fr[4]}
+
+        buyer_data = {'name': data.get('transferee_name')}
+        ffl_data = get_ffl_info()
+
+        generate_4473_pdf(filepath, firearm_data, buyer_data, ffl_data, full_data=data)
+
+        return jsonify({'success': True, 'pdf_url': f'/api/4473/download/{filename}'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/4473/download/<filename>')
+def api_download_4473(filename):
+    from flask import send_from_directory
+    directory = os.path.join(os.environ.get('DATA_DIR', '.'), "forms_4473")
+    return send_from_directory(directory, filename)
 
 # POS APIs
 @app.route('/api/products')
@@ -128,6 +167,8 @@ def api_get_receipt(sale_id):
     from ffl_suite.database.db_manager import execute_query
     res = execute_query("SELECT receipt_path FROM sales_orders WHERE id = ?", (sale_id,), fetch=True)
     if res and res[0][0]:
+        # Path stored in DB might be absolute or relative.
+        # If relative, we assume it's relative to CWD or DATA_DIR logic
         path = res[0][0]
         if os.path.exists(path):
             return send_file(path)
@@ -139,8 +180,8 @@ def api_inventory_update():
     data = request.json
     try:
         from ffl_suite.database.db_manager import execute_query
-        sql = "UPDATE firearms SET make=?, model=?, serial_number=?, type=?, caliber=?, upc=? WHERE id=?"
-        execute_query(sql, (data['make'], data['model'], data['serial'], data['type'], data['caliber'], data.get('upc'), data['id']))
+        sql = "UPDATE firearms SET make=?, model=?, serial_number=?, type=?, caliber=?, upc=?, price=?, cost=? WHERE id=?"
+        execute_query(sql, (data['make'], data['model'], data['serial'], data['type'], data['caliber'], data.get('upc'), data.get('price', 0), data.get('cost', 0), data['id']))
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
@@ -177,6 +218,35 @@ def api_nfa_entities():
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/nfa/forms', methods=['POST'])
+def api_nfa_forms():
+    data = request.json
+    try:
+        from ffl_suite.logic.nfa_manager import create_nfa_form, get_nfa_form_details
+        from ffl_suite.reports.nfa_pdf_generator import generate_form4_helper
+
+        # Create draft
+        row_id = create_nfa_form(data['form_type'], data['transferee_entity_id'], data['firearm_id'], data)
+        full_data = get_nfa_form_details(row_id)
+
+        # Generate PDF
+        pdf_dir = os.path.join(os.environ.get('DATA_DIR', '.'), "forms_nfa")
+        if not os.path.exists(pdf_dir): os.makedirs(pdf_dir)
+        filename = f"Form4_Helper_{row_id}.pdf"
+        filepath = os.path.join(pdf_dir, filename)
+
+        generate_form4_helper(filepath, full_data)
+
+        return jsonify({'success': True, 'pdf_url': f'/api/nfa/download/{filename}'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/nfa/download/<filename>')
+def api_download_nfa(filename):
+    from flask import send_from_directory
+    directory = os.path.join(os.environ.get('DATA_DIR', '.'), "forms_nfa")
+    return send_from_directory(directory, filename)
 
 # --- Gunsmithing APIs ---
 @app.route('/api/gunsmith/jobs', methods=['GET', 'POST', 'DELETE'])

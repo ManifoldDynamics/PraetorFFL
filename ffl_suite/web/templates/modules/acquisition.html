@@ -63,6 +63,18 @@
                 </div>
             </div>
 
+            <!-- Financials -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-gray-400 mb-2">Cost ($)</label>
+                    <input x-model="form.cost" type="number" step="0.01" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-2">Price ($)</label>
+                    <input x-model="form.price" type="number" step="0.01" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white">
+                </div>
+            </div>
+
             <button type="submit" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl shadow-lg mt-8 text-lg">
                 Confirm Acquisition
             </button>
@@ -75,7 +87,8 @@
         return {
             form: {
                 contact_id: '', acquisition_date: new Date().toISOString().split('T')[0],
-                upc: '', serial_number: '', make: '', model: '', type: 'Pistol', caliber: '', importer: '', condition: 'New'
+                upc: '', serial_number: '', make: '', model: '', type: 'Pistol', caliber: '', importer: '', condition: 'New',
+                price: '', cost: ''
             },
             contacts: [],
             init() {

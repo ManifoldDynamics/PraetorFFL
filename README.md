@@ -1,34 +1,38 @@
-# FFL Suite
+# FFL Suite (Web Architecture)
 
-Open Source FFL Management Software.
+A comprehensive, web-based FFL software suite featuring Inventory Management, A&D Bound Book, Digital 4473, NFA E-Forms Helper, and POS.
 
 ## Features
-- **Inventory Management**: Track acquisitions and dispositions.
-- **A&D Bound Book**: Automatic generation of ATF-compliant Bound Book.
-- **Form 4473**: Generate partial PDF 4473 forms.
-- **Contacts**: Manage customers and vendors.
-- **Compliance**: Basic checks for serial number duplication and inventory status.
+- **Web Interface:** Modern, touch-friendly UI using HTML5/Tailwind/Alpine.js.
+- **Inventory:** Track firearms with price, cost, and acquisition/disposition details.
+- **POS:** Point of Sale system with receipt generation and automatic inventory updates.
+- **4473 Wizard:** Digital form with signature capture and PDF generation.
+- **NFA Vault:** Dedicated module for NFA items and Trust management.
+- **Gunsmithing:** Job tracking board.
 
 ## Installation
 
-### Running from Source
-1. Install Python 3.8+.
-2. Install dependencies:
+### Local Desktop (Single EXE)
+1. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-3. Run the application:
+2. Run the application:
    ```bash
-   python ffl_suite/main.py
+   python main_web.py
    ```
+   This will launch a native window wrapping the web application.
 
-### Building the Executable
-1. Install dependencies.
-2. Run the build script:
+### Docker (Server)
+1. Build and run:
    ```bash
-   python build_app.py
+   docker-compose up --build -d
    ```
-3. The executable will be in the `dist/` folder.
+2. Access at `http://localhost:5000`.
 
-## Database
-The application uses SQLite (`ffl_data.db`). The database is automatically created in the application directory upon first run.
+## Building Single EXE
+Use PyInstaller to package the application:
+```bash
+python build_app.py
+```
+The executable will be in `dist/`.

@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS firearms (
     importer TEXT,
     condition TEXT,
     upc TEXT,
+    price REAL DEFAULT 0,
+    cost REAL DEFAULT 0,
 
     acquisition_date TEXT NOT NULL,
     source_contact_id INTEGER,

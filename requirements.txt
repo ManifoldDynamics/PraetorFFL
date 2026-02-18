@@ -1,6 +1,4 @@
 flask
-pywebview
+gunicorn
 fpdf2
-pyinstaller
-customtkinter
-tkinter-tooltip
+pywebview
